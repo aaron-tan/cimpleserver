@@ -59,7 +59,7 @@ int main(int argc, char** argv) {
       read(clientsocket_fd, &msg.payload_len, 8);
       msg.payload_len = msg.payload_len >> 56;
       msg.payload = malloc(msg.payload_len);
-      read(clientsocket_fd, &msg.payload, msg.payload_len);
+      read(clientsocket_fd, msg.payload, msg.payload_len);
 
       if (invalid_check(msg.header)) {
         // Create an error response.
@@ -69,7 +69,7 @@ int main(int argc, char** argv) {
         // Send error response to client and close the connection.
         write(clientsocket_fd, resp, 9);
 
-        // free(msg.payload);
+        free(msg.payload);
         close(clientsocket_fd);
         exit(1);
       }
@@ -84,9 +84,7 @@ int main(int argc, char** argv) {
         uint8_t head = 0x10;
         write(clientsocket_fd, &head, 1);
         write(clientsocket_fd, &msg.payload_len, 8);
-        for (int i = 0; i< msg.payload_len; i++) {
-          write(clientsocket_fd, &msg.payload[i], 1);
-        }
+        write(clientsocket_fd, msg.payload, msg.payload_len);
       }
 
       free(msg.payload);

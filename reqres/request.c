@@ -12,14 +12,16 @@ int invalid_check(uint8_t head) {
   type = type >> 4;
 
   // Do an invalid check.
-  if (type != 0x0 || type != 0x2 || type != 0x4 || type != 0x6) {
+  if (type == 0x0 || type == 0x2 || type == 0x4 || type == 0x6) {
     // The type digit is not any request types.
-    return 1;
-  } else if (type == 0x1 || type == 0x3 || type == 0x5 || type == 0x7) {
-    // Type digit is a response type return invalid.
-    return 1;
-  } else {
     return 0;
+  }
+  // else if (type == 0x1 || type == 0x3 || type == 0x5 || type == 0x7) {
+  //   // Type digit is a response type return invalid.
+  //   return 1;
+  // }
+  else {
+    return 1;
   }
 }
 
