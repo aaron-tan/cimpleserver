@@ -11,14 +11,3 @@ void err_response(uint8_t* err) {
 
   return;
 }
-
-void echo_response(struct message* msg, uint8_t* resp) {
-  // Header type.
-  resp[0] = 0x10;
-
-  memcpy((resp + 1), &msg->payload_len, 8);
-
-  memcpy((resp + 9), msg->payload, msg->payload_len);
-
-  return;
-}
