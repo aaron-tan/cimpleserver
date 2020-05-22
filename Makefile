@@ -17,5 +17,8 @@ request.o: reqres/request.c reqres/request.h
 response.o: reqres/response.c reqres/response.c
 	$(GCC) -c -o $@ $< $(CFLAGS)
 
+client: client-scaffold.c
+	$(GCC) -o client-scaffold $<
+
 clean:
 	rm *.o
