@@ -69,7 +69,7 @@ int main(int argc, char** argv) {
         // Send error response to client and close the connection.
         write(clientsocket_fd, resp, 9);
 
-        free(msg.payload);
+        // free(msg.payload);
         close(clientsocket_fd);
         exit(1);
       }
