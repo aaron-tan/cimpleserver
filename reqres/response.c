@@ -17,10 +17,6 @@ void echo_response(int socket_fd, struct message* msg) {
   memcpy((resp + 1), &paylen_be, 8);
   memcpy((resp + 9), msg->payload, msg->payload_len);
 
-  for (int i = 0; i < (9 + msg->payload_len); i++) {
-    printf("%hhx", resp[i]);
-  }
-
   write(socket_fd, resp, 9 + msg->payload_len);
 
   free(resp);
