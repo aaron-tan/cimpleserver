@@ -17,11 +17,9 @@ void echo_response(int socket_fd, struct message* msg) {
   memcpy((resp + 1), &paylen_be, 8);
   memcpy((resp + 9), msg->payload, msg->payload_len);
 
-  // Convert from little endian to big endian for payload
-
-  // for (int i = 0; i < (9 + msg->payload_len); i++) {
-    // printf("%hhx", resp[i]);
-  // }
+  for (int i = 0; i < (9 + msg->payload_len); i++) {
+    printf("%hhx", resp[i]);
+  }
 
   write(socket_fd, resp, 9 + msg->payload_len);
 
