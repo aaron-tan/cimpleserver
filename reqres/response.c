@@ -11,9 +11,16 @@ void err_response(uint8_t* err) {
 }
 
 void echo_response(int socket_fd, struct message* msg) {
-  write(socket_fd, &msg->header, 1);
-  write(socket_fd, &msg->payload_len, 8);
-  write(socket_fd, msg->payload, msg->payload_len);
+  uint8_t* resp = malloc(9 + msg->payload_len);
+  resp[0] = msg->header;
+  memcpy((resp + 1), &msg->payload_len, 8);
+  memcpy((resp + 9), msg->payload, msg->payload_len);
 
+  // write(socket_fd, &msg->header, 1);
+  // write(socket_fd, &msg->payload_len, 8);
+  // write(socket_fd, msg->payload, msg->payload_len);
+  write(socket_fd, resp, 9 + msg->payload_len);
+
+  free(resp);
   return;
 }

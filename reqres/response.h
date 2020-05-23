@@ -3,6 +3,7 @@
 #include <inttypes.h>
 #include <string.h>
 #include <unistd.h>
+#include <stdlib.h>
 #include "../server.h"
 
 // The response files contains functions used in handling server responses.
