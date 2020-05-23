@@ -12,7 +12,7 @@ void err_response(uint8_t* err) {
 
 void echo_response(int socket_fd, struct message* msg) {
   uint8_t* resp = malloc(9 + msg->payload_len);
-  resp[0] = msg->header;
+  resp[0] = 0x01;
   memcpy((resp + 1), &msg->payload_len, 8);
   memcpy((resp + 9), msg->payload, msg->payload_len);
 
