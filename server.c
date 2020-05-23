@@ -57,7 +57,7 @@ int main(int argc, char** argv) {
       // Get client request and read as a message.
 			read(clientsocket_fd, &msg.header, 1);
       read(clientsocket_fd, &msg.payload_len, 8);
-      msg.payload_len = msg.payload_len >> 56;
+      // msg.payload_len = msg.payload_len >> 56;
       msg.payload = malloc(msg.payload_len);
       read(clientsocket_fd, msg.payload, msg.payload_len);
 
