@@ -61,7 +61,7 @@ int main(int argc, char** argv) {
         exit(1);
       }
 
-      if (read(clientsocket_fd, &msg.payload_len, 8) == 0) {
+      if (recv(clientsocket_fd, &msg.payload_len, 8, 0) == 0) {
         close(clientsocket_fd);
         close(serversocket_fd);
         exit(1);
@@ -71,12 +71,7 @@ int main(int argc, char** argv) {
       // printf("%ld\n", msg.payload_len);
       msg.payload = malloc(msg.payload_len);
 
-      if (recv(clientsocket_fd, msg.payload, msg.payload_len, 0) == 0) {
-        free(msg.payload);
-        close(clientsocket_fd);
-        close(serversocket_fd);
-        exit(1);
-      }
+      recv(clientsocket_fd, msg.payload, msg.payload_len, 0);
 
       uint8_t* cpy_buf = malloc(9 + msg.payload_len);
       cpy_buf[0] = msg.header;
