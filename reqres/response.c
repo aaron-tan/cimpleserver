@@ -16,6 +16,10 @@ void echo_response(int socket_fd, struct message* msg) {
   memcpy((resp + 1), &msg->payload_len, 8);
   memcpy((resp + 9), msg->payload, msg->payload_len);
 
+  for (int i = 0; i < (9 + msg->payload_len); i++) {
+    printf("Resp message contains byte %hhx\n", resp[i]);
+  }
+
   // write(socket_fd, &msg->header, 1);
   // write(socket_fd, &msg->payload_len, 8);
   // write(socket_fd, msg->payload, msg->payload_len);
