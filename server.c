@@ -57,7 +57,8 @@ int main(int argc, char** argv) {
       // Get client request and read as a message.
 			read(clientsocket_fd, &msg.header, 1);
       read(clientsocket_fd, &msg.payload_len, 8);
-      msg.payload_len = msg.payload_len >> 56;
+      // msg.payload_len = msg.payload_len >> 56;
+      // printf("%ld\n", msg.payload_len);
       msg.payload = malloc(msg.payload_len);
       read(clientsocket_fd, msg.payload, msg.payload_len);
 
@@ -67,7 +68,7 @@ int main(int argc, char** argv) {
       memcpy((cpy_buf + 9), msg.payload, msg.payload_len);
 
       // for (int i = 0; i < (9 + msg.payload_len); i++) {
-        // printf("Read byte %hhx from client\n", cpy_buf[i]);
+      //   printf("Read byte %hhx from client\n", cpy_buf[i]);
       // }
 
       if (invalid_check(msg.header)) {
