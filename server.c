@@ -81,10 +81,12 @@ int main(int argc, char** argv) {
         // echo_response(resp);
 
         // Send the response to client.
-        uint8_t head = 0x10;
-        write(clientsocket_fd, &head, 1);
-        write(clientsocket_fd, &msg.payload_len, 8);
-        write(clientsocket_fd, msg.payload, msg.payload_len);
+        // uint8_t head = 0x10;
+        // write(clientsocket_fd, &head, 1);
+        // write(clientsocket_fd, &msg.payload_len, 8);
+        // write(clientsocket_fd, msg.payload, msg.payload_len);
+        msg.header = 0x10;
+        echo_response(clientsocket_fd, &msg);
       }
 
       free(msg.payload);
