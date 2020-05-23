@@ -55,13 +55,28 @@ int main(int argc, char** argv) {
 
 		if(p == 0) {
       // Get client request and read as a message.
-			read(clientsocket_fd, &msg.header, 1);
-      read(clientsocket_fd, &msg.payload_len, 8);
+			if (recv(clientsocket_fd, &msg.header, 1, 0) == 0) {
+        close(clientsocket_fd);
+        close(serversocket_fd);
+        exit(1);
+      }
+
+      if (read(clientsocket_fd, &msg.payload_len, 8) == 0) {
+        close(clientsocket_fd);
+        close(serversocket_fd);
+        exit(1);
+      }
       // msg.payload_len = msg.payload_len >> 56;
       msg.payload_len = htobe64(msg.payload_len);
-      printf("%ld\n", msg.payload_len);
+      // printf("%ld\n", msg.payload_len);
       msg.payload = malloc(msg.payload_len);
-      recv(clientsocket_fd, msg.payload, msg.payload_len, 0);
+
+      if (recv(clientsocket_fd, msg.payload, msg.payload_len, 0) == 0) {
+        free(msg.payload);
+        close(clientsocket_fd);
+        close(serversocket_fd);
+        exit(1);
+      }
 
       uint8_t* cpy_buf = malloc(9 + msg.payload_len);
       cpy_buf[0] = msg.header;
