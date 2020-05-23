@@ -54,31 +54,36 @@ int main(int argc, char** argv) {
 		pid_t p = fork();
 
 		if(p == 0) {
-      uint64_t paylen;
+      // uint64_t paylen;
+      int n = 1;
+      if (*(char*)&n == 1) { puts("Is little endian");}
 
       // Get client request and read as a message.
 			read(clientsocket_fd, &msg.header, 1);
 
-      read(clientsocket_fd, &paylen, 8);
-      // msg.payload_len = msg.payload_len >> 56;
-      htobe64(paylen);
-      msg.payload_len = paylen;
+      read(clientsocket_fd, &msg.payload_len, 8);
+      msg.payload_len = msg.payload_len >> 56;
+      // paylen = htobe64(msg.payload_len);
+      // paylen = be64toh(msg.payload_len);
+      // msg.payload_len = paylen;
       // printf("%ld\n", paylen);
+      printf("%ld\n", msg.payload_len);
 
       msg.payload = malloc(msg.payload_len);
       read(clientsocket_fd, msg.payload, msg.payload_len);
 
       // uint8_t* cpy_buf = malloc(9 + msg.payload_len);
       // cpy_buf[0] = msg.header;
-      uint8_t* paylenbuf = malloc(8);
-      memcpy(paylenbuf, &msg.payload_len, 8);
+      // uint8_t* paylenbuf = malloc(8);
+      // memcpy(paylenbuf, &msg.payload_len, 8);
       // memcpy((cpy_buf + 9), msg.payload, msg.payload_len);
+      uint8_t* payload_len = ((uint8_t*) &msg.payload_len);
 
-      // printf("Payload length 8 bytes: ");
-      // for (int i = 0; i < 8; i++) {
-      //   printf("%hhx", paylenbuf[i]);
-      // }
-      // printf("\n");
+      printf("Payload length 8 bytes: ");
+      for (int i = 0; i < 8; i++) {
+        printf("%hhx", payload_len[i]);
+      }
+      printf("\n");
 
       if (invalid_check(msg.header)) {
         // Create an error response.
