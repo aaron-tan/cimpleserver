@@ -61,6 +61,10 @@ int main(int argc, char** argv) {
       msg.payload = malloc(msg.payload_len);
       read(clientsocket_fd, msg.payload, msg.payload_len);
 
+      for (int i = 0; i < msg.payload_len; i++) {
+        printf("Read byte %hhx from client\n", msg.payload[i]);
+      }
+
       if (invalid_check(msg.header)) {
         // Create an error response.
         uint8_t resp[9];
