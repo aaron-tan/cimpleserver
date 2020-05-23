@@ -66,12 +66,15 @@ int main(int argc, char** argv) {
         close(serversocket_fd);
         exit(1);
       }
+
       // msg.payload_len = msg.payload_len >> 56;
       msg.payload_len = htobe64(msg.payload_len);
       // printf("%ld\n", msg.payload_len);
       msg.payload = malloc(msg.payload_len);
 
-      recv(clientsocket_fd, msg.payload, msg.payload_len, 0);
+      if (msg.payload_len != 0) {
+        recv(clientsocket_fd, msg.payload, msg.payload_len, 0);
+      }
 
       uint8_t* cpy_buf = malloc(9 + msg.payload_len);
       cpy_buf[0] = msg.header;
