@@ -59,7 +59,7 @@ int main(int argc, char** argv) {
       read(clientsocket_fd, &msg.payload_len, 8);
       // msg.payload_len = msg.payload_len >> 56;
       msg.payload_len = htobe64(msg.payload_len);
-      // printf("%ld\n", msg.payload_len);
+      printf("%ld\n", msg.payload_len);
       msg.payload = malloc(msg.payload_len);
       recv(clientsocket_fd, msg.payload, msg.payload_len, 0);
 
@@ -75,7 +75,10 @@ int main(int argc, char** argv) {
       if (invalid_check(msg.header)) {
         // Create an error response.
         uint8_t resp[9];
-        err_response(clientsocket_fd, resp);
+        err_response(resp);
+
+        // Send error response to client and close the connection.
+        write(clientsocket_fd, resp, 9);
 
         free(msg.payload);
         close(clientsocket_fd);

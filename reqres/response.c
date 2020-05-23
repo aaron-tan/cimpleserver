@@ -1,14 +1,11 @@
 #include "response.h"
 
-void err_response(int socket_fd, uint8_t* err) {
+void err_response(uint8_t* err) {
   err[0] = 0xf0;
 
   for (int i = 1; i < 9; i++) {
     err[i] = 0x00;
   }
-
-  // Send error response to client and close the connection.
-  write(socket_fd, err, 9);
 
   return;
 }
