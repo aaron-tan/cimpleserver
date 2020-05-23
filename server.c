@@ -51,59 +51,59 @@ int main(int argc, char** argv) {
 	while(1) {
 		uint32_t addrlen = sizeof(struct sockaddr_in);
 		clientsocket_fd = accept(serversocket_fd, (struct sockaddr*) &address, &addrlen);
-		pid_t p = fork();
+		// pid_t p = fork();
+    //
+		// if(p == 0) {
+		// }
+    // Get client request and read as a message.
+    read(clientsocket_fd, &msg.header, 1);
+    read(clientsocket_fd, &msg.payload_len, 8);
+    // msg.payload_len = msg.payload_len >> 56;
+    msg.payload_len = htobe64(msg.payload_len);
+    // printf("%ld\n", msg.payload_len);
+    msg.payload = malloc(msg.payload_len);
+    read(clientsocket_fd, msg.payload, msg.payload_len);
 
-		if(p == 0) {
-      // Get client request and read as a message.
-			read(clientsocket_fd, &msg.header, 1);
-      read(clientsocket_fd, &msg.payload_len, 8);
-      // msg.payload_len = msg.payload_len >> 56;
-      msg.payload_len = htobe64(msg.payload_len);
-      // printf("%ld\n", msg.payload_len);
-      msg.payload = malloc(msg.payload_len);
-      read(clientsocket_fd, msg.payload, msg.payload_len);
+    uint8_t* cpy_buf = malloc(9 + msg.payload_len);
+    cpy_buf[0] = msg.header;
+    memcpy((cpy_buf + 1), &msg.payload_len, 8);
+    memcpy((cpy_buf + 9), msg.payload, msg.payload_len);
 
-      uint8_t* cpy_buf = malloc(9 + msg.payload_len);
-      cpy_buf[0] = msg.header;
-      memcpy((cpy_buf + 1), &msg.payload_len, 8);
-      memcpy((cpy_buf + 9), msg.payload, msg.payload_len);
+    // for (int i = 0; i < (9 + msg.payload_len); i++) {
+    //   printf("Read byte %hhx from client\n", cpy_buf[i]);
+    // }
 
-      // for (int i = 0; i < (9 + msg.payload_len); i++) {
-      //   printf("Read byte %hhx from client\n", cpy_buf[i]);
-      // }
+    if (invalid_check(msg.header)) {
+      // Create an error response.
+      uint8_t resp[9];
+      err_response(resp);
 
-      if (invalid_check(msg.header)) {
-        // Create an error response.
-        uint8_t resp[9];
-        err_response(resp);
-
-        // Send error response to client and close the connection.
-        write(clientsocket_fd, resp, 9);
-
-        free(msg.payload);
-        close(clientsocket_fd);
-        exit(1);
-      }
-
-      if (echo_request(msg.header)) {
-        // Create a response.
-        // int msg_len = 9 + msg.payload_len;
-        // uint8_t resp[msg_len];
-        // echo_response(resp);
-
-        // Send the response to client.
-        // uint8_t head = 0x10;
-        // write(clientsocket_fd, &head, 1);
-        // write(clientsocket_fd, &msg.payload_len, 8);
-        // write(clientsocket_fd, msg.payload, msg.payload_len);
-        msg.header = 0x10;
-        echo_response(clientsocket_fd, &msg);
-      }
+      // Send error response to client and close the connection.
+      write(clientsocket_fd, resp, 9);
 
       free(msg.payload);
-			close(clientsocket_fd);
-			exit(1);
-		}
+      shutdown(clientsocket_fd, SHUT_RD);
+      exit(1);
+    }
+
+    if (echo_request(msg.header)) {
+      // Create a response.
+      // int msg_len = 9 + msg.payload_len;
+      // uint8_t resp[msg_len];
+      // echo_response(resp);
+
+      // Send the response to client.
+      // uint8_t head = 0x10;
+      // write(clientsocket_fd, &head, 1);
+      // write(clientsocket_fd, &msg.payload_len, 8);
+      // write(clientsocket_fd, msg.payload, msg.payload_len);
+      msg.header = 0x10;
+      echo_response(clientsocket_fd, &msg);
+    }
+
+    free(msg.payload);
+    shutdown(clientsocket_fd, SHUT_RDWR);
+    exit(1);
 	}
 	close(clientsocket_fd);
 	close(serversocket_fd);
