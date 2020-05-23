@@ -54,20 +54,20 @@ int main(int argc, char** argv) {
 		pid_t p = fork();
 
 		if(p == 0) {
-      // uint64_t paylen;
+      uint64_t paylen;
       int n = 1;
       if (*(char*)&n == 1) { puts("Is little endian");}
 
       // Get client request and read as a message.
 			read(clientsocket_fd, &msg.header, 1);
 
-      read(clientsocket_fd, &msg.payload_len, 8);
-      msg.payload_len = msg.payload_len >> 56;
-      // paylen = htobe64(msg.payload_len);
+      read(clientsocket_fd, &paylen, 8);
+      // msg.payload_len = msg.payload_len >> 56;
+      msg.payload_len = htobe64(paylen);
       // paylen = be64toh(msg.payload_len);
       // msg.payload_len = paylen;
       // printf("%ld\n", paylen);
-      printf("%ld\n", msg.payload_len);
+      printf("%ld\n", paylen);
 
       msg.payload = malloc(msg.payload_len);
       read(clientsocket_fd, msg.payload, msg.payload_len);
