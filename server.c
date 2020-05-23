@@ -55,8 +55,8 @@ int main(int argc, char** argv) {
 
 		if(p == 0) {
       uint64_t paylen;
-      int n = 1;
-      if (*(char*)&n == 1) { puts("Is little endian");}
+      // int n = 1;
+      // if (*(char*)&n == 1) { puts("Is little endian");}
 
       // Get client request and read as a message.
 			read(clientsocket_fd, &msg.header, 1);
@@ -67,9 +67,9 @@ int main(int argc, char** argv) {
       // paylen = be64toh(msg.payload_len);
       // msg.payload_len = paylen;
       // printf("%ld\n", paylen);
-      printf("%ld\n", paylen);
+      // printf("%ld\n", paylen);
 
-      msg.payload = malloc(msg.payload_len);
+      // msg.payload = malloc(msg.payload_len);
       read(clientsocket_fd, msg.payload, msg.payload_len);
 
       // uint8_t* cpy_buf = malloc(9 + msg.payload_len);
@@ -77,13 +77,13 @@ int main(int argc, char** argv) {
       // uint8_t* paylenbuf = malloc(8);
       // memcpy(paylenbuf, &msg.payload_len, 8);
       // memcpy((cpy_buf + 9), msg.payload, msg.payload_len);
-      uint8_t* payload_len = ((uint8_t*) &msg.payload_len);
+      // uint8_t* payload_len = ((uint8_t*) &msg.payload_len);
 
-      printf("Payload length 8 bytes: ");
-      for (int i = 0; i < 8; i++) {
-        printf("%hhx", payload_len[i]);
-      }
-      printf("\n");
+      // printf("Payload length 8 bytes: ");
+      // for (int i = 0; i < 8; i++) {
+      //   printf("%hhx", payload_len[i]);
+      // }
+      // printf("\n");
 
       if (invalid_check(msg.header)) {
         // Create an error response.
@@ -93,7 +93,7 @@ int main(int argc, char** argv) {
         // Send error response to client and close the connection.
         write(clientsocket_fd, resp, 9);
 
-        free(msg.payload);
+        // free(msg.payload);
         close(clientsocket_fd);
         exit(1);
       }
@@ -113,7 +113,7 @@ int main(int argc, char** argv) {
         echo_response(clientsocket_fd, &msg);
       }
 
-      free(msg.payload);
+      // free(msg.payload);
 			close(clientsocket_fd);
 			exit(1);
 		}
