@@ -5,6 +5,7 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <endian.h>
 #include "../server.h"
 
 // The response files contains functions used in handling server responses.
