@@ -40,7 +40,7 @@ int main(int argc, char** argv) {
 
 	serversocket_fd = socket(AF_INET, SOCK_STREAM, 0);
 
-	if(serversocket_fd < 0) {
+	if (serversocket_fd < 0) {
 		close(serversocket_fd);
 		exit(1);
 	}
@@ -51,7 +51,7 @@ int main(int argc, char** argv) {
 
 	setsockopt(serversocket_fd, SOL_SOCKET, SO_REUSEADDR | SO_REUSEPORT, &option, sizeof(int));
 
-	if(bind(serversocket_fd, (struct sockaddr*) &address, sizeof(struct sockaddr_in))) {
+	if (bind(serversocket_fd, (struct sockaddr*) &address, sizeof(struct sockaddr_in))) {
 		close(serversocket_fd);
 		exit(1);
 	}
@@ -63,7 +63,7 @@ int main(int argc, char** argv) {
   // Keep track of the biggest file descriptor.
   maxfd = serversocket_fd;
 
-	while(1) {
+	while (1) {
     // We do this because select changes the set so we use two sets to keep track of this change.
     read_fds = master;
 
