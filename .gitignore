@@ -1,4 +1,4 @@
 generate-config
-client-scaffold
-client-scaffold.c
+client-*
 config_file
+client
