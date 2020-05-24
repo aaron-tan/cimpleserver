@@ -65,7 +65,7 @@ int main(int argc, char** argv) {
 
 	while(1) {
     read_fds = master;
-    puts("Select is waiting for connections");
+    // puts("Select is waiting for connections");
     ret = select(maxfd + 1, &read_fds, NULL, NULL, NULL);
 
     if (ret < 0) {
@@ -76,7 +76,7 @@ int main(int argc, char** argv) {
     // If there is an incoming conection to clientsocket_fd it's new.
     if (FD_ISSET(serversocket_fd, &read_fds)) {
       // Accept the new connection and add this new fd into the set.
-      printf("We have an incoming connection\n");
+      // printf("We have an incoming connection\n");
       uint32_t addrlen = sizeof(struct sockaddr_in);
       clientsocket_fd = accept(serversocket_fd, (struct sockaddr*) &address, &addrlen);
 
@@ -84,7 +84,7 @@ int main(int argc, char** argv) {
       if (clientsocket_fd > maxfd) {
         maxfd = clientsocket_fd;
       }
-      printf("Client socket fd: %d\n", clientsocket_fd);
+      // printf("Client socket fd: %d\n", clientsocket_fd);
     } else {
       for (int i = 0; i <= maxfd; i++) {
         if (FD_ISSET(i, &read_fds)) {
