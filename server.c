@@ -64,8 +64,9 @@ int main(int argc, char** argv) {
   maxfd = serversocket_fd;
 
 	while(1) {
+    // We do this because select changes the set so we use two sets to keep track of this change.
     read_fds = master;
-    // puts("Select is waiting for connections");
+
     ret = select(maxfd + 1, &read_fds, NULL, NULL, NULL);
 
     if (ret < 0) {
@@ -76,7 +77,6 @@ int main(int argc, char** argv) {
     // If there is an incoming conection to clientsocket_fd it's new.
     if (FD_ISSET(serversocket_fd, &read_fds)) {
       // Accept the new connection and add this new fd into the set.
-      // printf("We have an incoming connection\n");
       uint32_t addrlen = sizeof(struct sockaddr_in);
       clientsocket_fd = accept(serversocket_fd, (struct sockaddr*) &address, &addrlen);
 
@@ -84,22 +84,23 @@ int main(int argc, char** argv) {
       if (clientsocket_fd > maxfd) {
         maxfd = clientsocket_fd;
       }
-      // printf("Client socket fd: %d\n", clientsocket_fd);
+
     } else {
+      // Otherwise we have activity on existing connections. Handle them.
       for (int i = 0; i <= maxfd; i++) {
         if (FD_ISSET(i, &read_fds)) {
           // Get client request and read as a message.
           if (recv(i, &msg.header, 1, 0) == 0) {
             close(i);
             FD_CLR(i, &master);
-            // exit(1);
+
             continue;
           }
 
           if (recv(i, &msg.payload_len, 8, 0) == 0) {
             close(i);
             FD_CLR(i, &master);
-            // exit(1);
+
             continue;
           }
 
@@ -122,7 +123,7 @@ int main(int argc, char** argv) {
             free(msg.payload);
             close(i);
             FD_CLR(i, &master);
-            // exit(1);
+
             continue;
           }
 
@@ -136,108 +137,7 @@ int main(int argc, char** argv) {
         }
       }
     }
-    // Else it's activity on an existing file descriptor. Perform response.
 
-
-		// pid_t p = fork();
-
-		// if(p == 0) {
-      // puts("In the child process");
-      // printf("Current maxfd: %d\n", maxfd);
-      //
-      // if (FD_ISSET(5, &read_fds)) {
-      //   puts("File descriptor 5 has a message");
-      //
-      //   // Get client request and read as a message.
-      //   if (recv(clientsocket_fd, &msg.header, 1, 0) == 0) {
-      //     close(clientsocket_fd);
-      //     // FD_CLR(i, &master);
-      //     exit(1);
-      //   }
-      //
-      //   if (recv(clientsocket_fd, &msg.payload_len, 8, 0) == 0) {
-      //     close(clientsocket_fd);
-      //     // FD_CLR(i, &master);
-      //     exit(1);
-      //   }
-      //
-      //   msg.payload_len = htobe64(msg.payload_len);
-      //
-      //   msg.payload = malloc(msg.payload_len);
-      //
-      //   if (msg.payload_len != 0) {
-      //     recv(clientsocket_fd, msg.payload, msg.payload_len, 0);
-      //   }
-      //
-      //   if (invalid_check(msg.header)) {
-      //     // Create an error response.
-      //     uint8_t resp[9];
-      //     err_response(resp);
-      //
-      //     // Send error response to client and close the connection.
-      //     write(clientsocket_fd, resp, 9);
-      //
-      //     free(msg.payload);
-      //     close(clientsocket_fd);
-      //     exit(1);
-      //   }
-      //
-      //   if (echo_request(msg.header)) {
-      //     // Send a echo response.
-      //     msg.header = 0x10;
-      //     echo_response(clientsocket_fd, &msg);
-      //   }
-      //
-      //   free(msg.payload);
-      //
-      //   continue;
-      // }
-
-      // // Get client request and read as a message.
-      // if (recv(clientsocket_fd, &msg.header, 1, 0) == 0) {
-      //   close(clientsocket_fd);
-      //   // FD_CLR(i, &master);
-      //   exit(1);
-      // }
-      //
-      // if (recv(clientsocket_fd, &msg.payload_len, 8, 0) == 0) {
-      //   close(clientsocket_fd);
-      //   // FD_CLR(i, &master);
-      //   exit(1);
-      // }
-      //
-      // msg.payload_len = htobe64(msg.payload_len);
-      //
-      // msg.payload = malloc(msg.payload_len);
-      //
-      // if (msg.payload_len != 0) {
-      //   recv(clientsocket_fd, msg.payload, msg.payload_len, 0);
-      // }
-      //
-      // if (invalid_check(msg.header)) {
-      //   // Create an error response.
-      //   uint8_t resp[9];
-      //   err_response(resp);
-      //
-      //   // Send error response to client and close the connection.
-      //   write(clientsocket_fd, resp, 9);
-      //
-      //   free(msg.payload);
-      //   close(clientsocket_fd);
-      //   exit(1);
-      // }
-      //
-      // if (echo_request(msg.header)) {
-      //   // Send a echo response.
-      //   msg.header = 0x10;
-      //   echo_response(clientsocket_fd, &msg);
-      // }
-      //
-      // free(msg.payload);
-      // close(clientsocket_fd);
-      // exit(1);
-		// }
-    // puts("Exiting child process");
 	}
 	close(clientsocket_fd);
 	close(serversocket_fd);
