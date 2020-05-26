@@ -100,9 +100,7 @@ void size_response(int socket_fd, struct message* msg) {
   char* filename = malloc(len);
   memcpy(filename, msg->payload, len);
 
-  FILE* fp = fopen(filename, "rb");
-
-  if (fp == NULL) {
+  if (access(filename, F_OK) != 0) {
     uint8_t err[9];
     err_response(err);
     write(socket_fd, err, 10);
@@ -110,6 +108,8 @@ void size_response(int socket_fd, struct message* msg) {
     free(filename);
     return;
   }
+
+  FILE* fp = fopen(filename, "rb");
 
   // Seek to the end of the file and get the position at the end.
   fseek(fp, 0, SEEK_END);
@@ -130,6 +130,7 @@ void size_response(int socket_fd, struct message* msg) {
 
   write(socket_fd, resp, 17);
 
+  fclose(fp);
   free(filename);
   return;
 }
