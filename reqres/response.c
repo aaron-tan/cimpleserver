@@ -108,14 +108,14 @@ void size_response(int socket_fd, char* target_dir, struct message* msg) {
 
   // char* payload = malloc(len);
   memcpy((filename + strlen(target_dir) + 1), msg->payload, len);
-  printf("%s\n", filename);
+  // printf("%s\n", filename);
   // strcat(payload, filename);
   // printf("%s\n", payload);
   // printf("%ld\n", len);
 
   if ((ret = stat(filename, &buf)) != 0) {
-    printf("Return value: %d\n", ret);
-    perror("Stat returns error");
+    // printf("Return value: %d\n", ret);
+    // perror("Stat returns error");
     uint8_t error[9];
     err_response(error);
     write(socket_fd, error, 9);
@@ -147,6 +147,7 @@ void size_response(int socket_fd, char* target_dir, struct message* msg) {
   write(socket_fd, resp, 17);
 
   // fclose(fp);
+  free(resp);
   free(filename);
   return;
 }
