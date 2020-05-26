@@ -6,6 +6,9 @@
 // invalid_check checks the type digit in the header if it is invalid.
 int invalid_check(uint8_t head);
 
+// Check if we get a shutdown request. Shutdown the server if we do.
+int shutdown_request(uint8_t head);
+
 // Check if message is an echo request.
 int echo_request(uint8_t head);
 

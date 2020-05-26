@@ -20,6 +20,19 @@ int invalid_check(uint8_t head) {
   }
 }
 
+int shutdown_request(uint8_t head) {
+  // Get the first 4 bits.
+  uint8_t type = head & 0xf0;
+  type = type >> 4;
+
+  // Check if it is a shutdown request.
+  if (type == 0x8) {
+    return 1;
+  } else {
+    return 0;
+  }
+}
+
 int echo_request(uint8_t head) {
   // Get the first 4 bits by masking.
   uint8_t type = head & 0xf0;

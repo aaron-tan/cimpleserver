@@ -91,15 +91,23 @@ int main(int argc, char** argv) {
         if (FD_ISSET(i, &read_fds)) {
           // Get client request and read as a message.
           if (recv(i, &msg.header, 1, 0) == 0) {
-            puts("Shutdown detected");
             close(i);
             FD_CLR(i, &master);
 
             continue;
           }
 
+          if (shutdown_request(msg.header)) {
+            // Close all connections.
+            for (int i = 0; i <= maxfd; i++) {
+              shutdown(i, SHUT_RDWR);
+            }
+
+            free(conf.dir);
+            return 0;
+          }
+
           if (recv(i, &msg.payload_len, 8, 0) == 0) {
-            puts("Shutdown detected");
             close(i);
             FD_CLR(i, &master);
 
@@ -115,7 +123,6 @@ int main(int argc, char** argv) {
           }
 
           if (invalid_check(msg.header)) {
-            puts("Sending an error");
             // Create an error response.
             uint8_t resp[9];
             err_response(resp);
