@@ -99,11 +99,13 @@ void dir_response(int socket_fd, char* target, struct message* msg) {
 
 void size_response(int socket_fd, struct message* msg) {
   struct stat buf;
+  int ret;
   uint64_t len = msg->payload_len;
   char* filename = malloc(len);
   memcpy(filename, msg->payload, len);
 
-  if (stat(filename, &buf) != 0) {
+  if ((ret = stat(filename, &buf)) != 0) {
+    printf("Return value: %d\n", ret);
     perror("Stat returns error");
     uint8_t error[9];
     err_response(error);
