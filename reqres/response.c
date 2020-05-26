@@ -97,15 +97,17 @@ void dir_response(int socket_fd, char* target, struct message* msg) {
 }
 
 
-void size_response(int socket_fd, struct message* msg) {
+void size_response(int socket_fd, char* target_dir, struct message* msg) {
   struct stat buf;
   int ret;
   uint64_t len = msg->payload_len;
-  char* filename = malloc(len + 2);
-  strcpy(filename, "./");
+  char* filename = malloc(strlen(target_dir) + 1 + len);
+  memcpy(filename, target_dir, strlen(target_dir));
+  filename[strlen(target_dir)] = '/';
+  printf("%s\n", filename);
 
   // char* payload = malloc(len);
-  memcpy((filename + 2), msg->payload, len);
+  memcpy((filename + strlen(target_dir) + 1), msg->payload, len);
   printf("%s\n", filename);
   // strcat(payload, filename);
   // printf("%s\n", payload);

@@ -21,6 +21,6 @@ void echo_response(int socket_fd, struct message* msg);
 void dir_response(int socket_fd, char* target, struct message* msg);
 
 // Construct a response for the file size query.
-void size_response(int socket_fd, struct message* msg);
+void size_response(int socket_fd, char* target_dir, struct message* msg);
 
 #endif

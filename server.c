@@ -152,7 +152,7 @@ int main(int argc, char** argv) {
           if (size_request(msg.header)) {
             // Send a response with the file size.
             msg.header = 0x50;
-            size_response(i, &msg);
+            size_response(i, conf.dir, &msg);
           }
 
           free(msg.payload);
