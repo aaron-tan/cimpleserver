@@ -103,6 +103,7 @@ void size_response(int socket_fd, struct message* msg) {
   uint64_t len = msg->payload_len;
   char* filename = malloc(len);
   memcpy(filename, msg->payload, len);
+  printf("%s\n", filename);
 
   if ((ret = stat(filename, &buf)) != 0) {
     printf("Return value: %d\n", ret);
