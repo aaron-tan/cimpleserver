@@ -1,3 +1,5 @@
+#include <sys/types.h>
+#include <sys/stat.h>
 #include "response.h"
 
 void err_response(uint8_t* err) {
@@ -96,26 +98,28 @@ void dir_response(int socket_fd, char* target, struct message* msg) {
 
 
 void size_response(int socket_fd, struct message* msg) {
+  struct stat buf;
   uint64_t len = msg->payload_len;
   char* filename = malloc(len);
   memcpy(filename, msg->payload, len);
 
-  if (access(filename, F_OK) != 0) {
-    uint8_t err[9];
-    err_response(err);
-    write(socket_fd, err, 9);
+  if (stat(filename, &buf) != 0) {
+    uint8_t error[9];
+    err_response(error);
+    write(socket_fd, error, 9);
 
     free(filename);
     return;
   }
 
-  FILE* fp = fopen(filename, "rb");
+  // FILE* fp = fopen(filename, "rb");
 
   // Seek to the end of the file and get the position at the end.
-  fseek(fp, 0, SEEK_END);
+  // fseek(fp, 0, SEEK_END);
 
   // Get the end position, that is the size of the file.
-  uint64_t fsize = (uint64_t) ftell(fp);
+  // uint64_t fsize = (uint64_t) ftell(fp);
+  uint64_t fsize = buf.st_size;
 
   // Construct the message.
   uint8_t* resp = malloc(17);
@@ -130,7 +134,7 @@ void size_response(int socket_fd, struct message* msg) {
 
   write(socket_fd, resp, 17);
 
-  fclose(fp);
+  // fclose(fp);
   free(filename);
   return;
 }
