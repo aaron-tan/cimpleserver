@@ -104,6 +104,7 @@ void size_response(int socket_fd, struct message* msg) {
   memcpy(filename, msg->payload, len);
 
   if (stat(filename, &buf) != 0) {
+    perror("Stat returns error");
     uint8_t error[9];
     err_response(error);
     write(socket_fd, error, 9);
