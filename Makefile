@@ -1,5 +1,6 @@
 GCC=gcc
 CFLAGS=-O0 -Wall -Werror -Werror=vla -g -std=gnu11 -lm -lpthread -lrt
+CLIENT_FLAGS=-O0 -Wall -Werror -g -std=gnu11 -fsanitize=address
 CFLAG_SAN=$(CFLAGS) -fsanitize=address
 DEPS=
 OBJ=readconfig.o request.o response.o
@@ -18,7 +19,7 @@ response.o: reqres/response.c reqres/response.c
 	$(GCC) -c -o $@ $< $(CFLAGS)
 
 client: client-scaffold.c
-	$(GCC) -o client-scaffold $< $(CFLAG_SAN)
+	$(GCC) -o client-scaffold $< $(CLIENT_FLAGS)
 
 clean:
 	rm *.o

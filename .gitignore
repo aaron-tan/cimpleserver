@@ -1,4 +1,5 @@
-generate-config
+generate-config*
 client-*
 config_file
 client
+testing

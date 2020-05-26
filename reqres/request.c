@@ -32,3 +32,27 @@ int echo_request(uint8_t head) {
     return 0;
   }
 }
+
+int dir_request(uint8_t head) {
+  // Get the first 4 bits.
+  uint8_t type = head & 0xf0;
+  type = type >> 4;
+
+  if (type == 0x2) {
+    return 1;
+  } else {
+    return 0;
+  }
+}
+
+int size_request(uint8_t head) {
+  // Get the first 4 bits.
+  uint8_t type = head & 0xf0;
+  type = type >> 4;
+
+  if (type == 0x4) {
+    return 1;
+  } else {
+    return 0;
+  }
+}

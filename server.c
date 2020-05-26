@@ -133,6 +133,18 @@ int main(int argc, char** argv) {
             echo_response(i, &msg);
           }
 
+          if (dir_request(msg.header)) {
+            // Send a response with filenames in the payload.
+            msg.header = 0x30;
+            dir_response(i, conf.dir, &msg);
+          }
+
+          if (size_request(msg.header)) {
+            // Send a response with the file size.
+            msg.header = 0x50;
+            size_response(i, &msg);
+          }
+
           free(msg.payload);
         }
       }

@@ -6,6 +6,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <endian.h>
+#include <dirent.h>
 #include "../server.h"
 
 // The response files contains functions used in handling server responses.
@@ -15,5 +16,11 @@ void err_response(uint8_t* err);
 
 // Construct an echo response with type 0x10 with the payload.
 void echo_response(int socket_fd, struct message* msg);
+
+// Construct a response to the directory request and get the filenames.
+void dir_response(int socket_fd, char* target, struct message* msg);
+
+// Construct a response for the file size query.
+void size_response(int socket_fd, struct message* msg);
 
 #endif
