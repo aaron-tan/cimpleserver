@@ -104,7 +104,7 @@ void size_response(int socket_fd, char* target_dir, struct message* msg) {
   char* filename = malloc(strlen(target_dir) + 1 + len);
   memcpy(filename, target_dir, strlen(target_dir));
   filename[strlen(target_dir)] = '/';
-  printf("%s\n", filename);
+  // printf("%s\n", filename);
 
   // char* payload = malloc(len);
   memcpy((filename + strlen(target_dir) + 1), msg->payload, len);
