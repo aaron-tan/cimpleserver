@@ -1,5 +1,7 @@
 #ifndef REQ_H
 #define REQ_H
+#include <string.h>
+#include "../server.h"
 
 // The request files contains functions used to handle all client requests.
 
@@ -17,5 +19,9 @@ int dir_request(uint8_t head);
 
 // Check if type digit is file size query.
 int size_request(uint8_t head);
+
+// Check if it is a retrieve request. If it is, copy session id, offset, data length
+// and filename into the arguments given, then return 1 or 0.
+int retrieve_request(struct message* msg, struct six_type* payl);
 
 #endif

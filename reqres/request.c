@@ -69,3 +69,23 @@ int size_request(uint8_t head) {
     return 0;
   }
 }
+
+int retrieve_request(struct message* msg, struct six_type* payl) {
+  // Check the type digit.
+  uint8_t type = msg->header & 0xf0;
+  type = type >> 4;
+
+  if (type == 0x6) {
+    payl->data = malloc(payl->var_len);
+
+    memcpy(&payl->session_id, msg->payload, 4);
+    memcpy(&payl->offset, (msg->payload + 4), 8);
+    memcpy(&payl->data_len, (msg->payload + 12), 8);
+    memcpy(payl->data, (msg->payload + 20), payl->var_len);
+    printf("%s\n", payl->data);
+
+    return 1;
+  } else {
+    return 0;
+  }
+}

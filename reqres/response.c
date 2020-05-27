@@ -102,20 +102,13 @@ void size_response(int socket_fd, char* target_dir, struct message* msg) {
   int ret;
   uint64_t len = msg->payload_len;
   char* filename = malloc(strlen(target_dir) + 1 + len);
+
   memcpy(filename, target_dir, strlen(target_dir));
   filename[strlen(target_dir)] = '/';
-  // printf("%s\n", filename);
 
-  // char* payload = malloc(len);
   memcpy((filename + strlen(target_dir) + 1), msg->payload, len);
-  // printf("%s\n", filename);
-  // strcat(payload, filename);
-  // printf("%s\n", payload);
-  // printf("%ld\n", len);
 
   if ((ret = stat(filename, &buf)) != 0) {
-    // printf("Return value: %d\n", ret);
-    // perror("Stat returns error");
     uint8_t error[9];
     err_response(error);
     write(socket_fd, error, 9);
@@ -124,13 +117,7 @@ void size_response(int socket_fd, char* target_dir, struct message* msg) {
     return;
   }
 
-  // FILE* fp = fopen(filename, "rb");
-
-  // Seek to the end of the file and get the position at the end.
-  // fseek(fp, 0, SEEK_END);
-
-  // Get the end position, that is the size of the file.
-  // uint64_t fsize = (uint64_t) ftell(fp);
+  // Get the file size.
   uint64_t fsize = buf.st_size;
 
   // Construct the message.
@@ -146,8 +133,49 @@ void size_response(int socket_fd, char* target_dir, struct message* msg) {
 
   write(socket_fd, resp, 17);
 
-  // fclose(fp);
   free(resp);
   free(filename);
+  return;
+}
+
+void retrieve_response(int socket_fd, struct message* msg, char* target_dir, struct six_type* payl) {
+  char* filepath = malloc(strlen(target_dir) + 1 + strlen(payl->data) + 1);
+
+  memcpy(filepath, target_dir, strlen(target_dir));
+  filepath[strlen(target_dir)] = '/';
+
+  memcpy((filepath + strlen(target_dir) + 1), payl->data, (strlen(payl->data) + 1));
+
+  FILE* fp = fopen(filepath, "rb");
+
+  if (fp == NULL) {
+    perror("File error");
+    return;
+  }
+
+  uint64_t data_lenbe = htobe64(payl->data_len);
+
+  // Create a response.
+  uint8_t* resp = malloc(29 + data_lenbe);
+
+  // Seek the file to the offset, given by uint8_t* offset.
+  fseek(fp, payl->offset, SEEK_SET);
+
+  resp[0] = 0x70;
+  uint64_t paylen = 20 + payl->data_len;
+  uint64_t paylen_be = htobe64(paylen);
+  memcpy((resp + 1), &paylen_be, 8);
+
+  memcpy((resp + 9), &payl->session_id, 4);
+  memcpy((resp + 13), &payl->offset, 8);
+  memcpy((resp + 21), &payl->data_len, 8);
+
+  // Read the contents of the file into the response.
+  fread((resp + 29), 1, payl->data_len, fp);
+
+  write(socket_fd, resp, 29 + payl->data_len);
+
+  free(filepath);
+  free(resp);
   return;
 }

@@ -23,4 +23,6 @@ void dir_response(int socket_fd, char* target, struct message* msg);
 // Construct a response for the file size query.
 void size_response(int socket_fd, char* target_dir, struct message* msg);
 
+// Send file data to the client. Passed in payload structure as arguments.
+void retrieve_response(int socket_fd, struct message* msg, char* target_dir, struct six_type* payl);
 #endif

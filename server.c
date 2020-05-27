@@ -155,6 +155,18 @@ int main(int argc, char** argv) {
             size_response(i, conf.dir, &msg);
           }
 
+          /**Check if it is a retrieve file request, if it is split payload
+          * into the struct payl given, representing its corresponding name.
+          */
+          struct six_type payl;
+          payl.var_len = (msg.payload_len - 20);
+
+          if (retrieve_request(&msg, &payl)) {
+            // Send the file as a response.
+            msg.header = 0x70;
+            retrieve_response(i, &msg, conf.dir, &payl);
+          }
+
           free(msg.payload);
         }
       }
