@@ -139,6 +139,7 @@ void size_response(int socket_fd, char* target_dir, struct message* msg) {
 }
 
 void retrieve_response(int socket_fd, struct message* msg, char* target_dir, struct six_type* payl) {
+  struct stat buf;
   char* filepath = malloc(strlen(target_dir) + 1 + strlen(payl->data) + 1);
 
   memcpy(filepath, target_dir, strlen(target_dir));
@@ -147,8 +148,12 @@ void retrieve_response(int socket_fd, struct message* msg, char* target_dir, str
   memcpy((filepath + strlen(target_dir) + 1), payl->data, (strlen(payl->data) + 1));
 
   FILE* fp = fopen(filepath, "rb");
+  stat(filepath, &buf);
 
-  if (fp == NULL) {
+  uint64_t data_lenbe = htobe64(payl->data_len);
+  uint64_t offset_be = htobe64(payl->offset);
+
+  if (fp == NULL || offset_be > buf.st_size || (data_lenbe + offset_be) > buf.st_size) {
     uint8_t error[9];
     err_response(error);
     write(socket_fd, error, 9);
@@ -156,9 +161,6 @@ void retrieve_response(int socket_fd, struct message* msg, char* target_dir, str
     free(filepath);
     return;
   }
-
-  uint64_t data_lenbe = htobe64(payl->data_len);
-  uint64_t offset_be = htobe64(payl->offset);
 
   // Create a response.
   uint8_t* resp = malloc(29 + data_lenbe);
