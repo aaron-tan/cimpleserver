@@ -152,8 +152,8 @@ void retrieve_response(int socket_fd, struct message* msg, char* target_dir, str
 
   uint64_t data_lenbe = htobe64(payl->data_len);
   uint64_t offset_be = htobe64(payl->offset);
-  printf("Data length in big endian: lx\n", data_lenbe);
-  printf("Offset in big endian: lx\n", offset_be);
+  printf("Data length in big endian: %lx\n", data_lenbe);
+  printf("Offset in big endian: %lx\n", offset_be);
 
   if (fp == NULL || offset_be > buf.st_size || (data_lenbe + offset_be) > buf.st_size) {
     uint8_t error[9];
