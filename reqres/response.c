@@ -186,6 +186,7 @@ void retrieve_response(int socket_fd, struct message* msg, char* target_dir, str
 
   write(socket_fd, resp, 29 + data_lenbe);
 
+  free(payl->data);
   free(filepath);
   free(resp);
   return;
