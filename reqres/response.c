@@ -152,8 +152,8 @@ void retrieve_response(int socket_fd, struct message* msg, char* target_dir, str
 
   uint64_t data_lenbe = htobe64(payl->data_len);
   uint64_t offset_be = htobe64(payl->offset);
-  printf("Data length in big endian: %lx\n", data_lenbe);
-  printf("Offset in big endian: %lx\n", offset_be);
+  // printf("Data length in big endian: %lx\n", data_lenbe);
+  // printf("Offset in big endian: %lx\n", offset_be);
 
   if (fp == NULL || offset_be > buf.st_size || (data_lenbe + offset_be) > buf.st_size) {
     uint8_t error[9];
@@ -171,8 +171,10 @@ void retrieve_response(int socket_fd, struct message* msg, char* target_dir, str
   fseek(fp, offset_be, SEEK_SET);
 
   resp[0] = 0x70;
-  uint64_t paylen = 20 + data_lenbe;
-  printf("Pay length in big endian: %lx\n", paylen);
+  uint64_t paylen_be = 20 + data_lenbe;
+  // Convert to host byte order so that client receives in network order.
+  uint64_t paylen = be64toh(paylen_be);
+  // printf("Pay length in big endian: %lx\n", paylen);
   memcpy((resp + 1), &paylen, 8);
 
   memcpy((resp + 9), &payl->session_id, 4);
