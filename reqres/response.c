@@ -149,7 +149,11 @@ void retrieve_response(int socket_fd, struct message* msg, char* target_dir, str
   FILE* fp = fopen(filepath, "rb");
 
   if (fp == NULL) {
-    perror("File error");
+    uint8_t error[9];
+    err_response(error);
+    write(socket_fd, error, 9);
+
+    free(filepath);
     return;
   }
 
