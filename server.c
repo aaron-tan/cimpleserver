@@ -10,6 +10,7 @@
 #include "conf/readconfig.h"
 #include "reqres/request.h"
 #include "reqres/response.h"
+// #include "reqres/compression.h"
 
 int main(int argc, char** argv) {
   if (argc < 2) {
@@ -63,6 +64,18 @@ int main(int argc, char** argv) {
   // Keep track of the biggest file descriptor.
   maxfd = serversocket_fd;
 
+  // Read the compression dictionary.
+  // uint32_t* bit_array = read_compress("compression.dict");
+  // printf("%x\n", bit_array[2]);
+  // int bit = get_bit(bit_array, 35);
+  // if (bit) {
+  //   puts("Bit is 1");
+  // } else {
+  //   puts("Bit is 0");
+  // }
+  // create_dict(bit_array);
+  // create_huffman_tree(bit_array);
+
 	while (1) {
     // We do this because select changes the set so we use two sets to keep track of this change.
     read_fds = master;
@@ -103,6 +116,7 @@ int main(int argc, char** argv) {
               shutdown(i, SHUT_RDWR);
             }
 
+            // free(bit_array);
             free(conf.dir);
             return 0;
           }

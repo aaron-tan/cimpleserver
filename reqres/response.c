@@ -154,26 +154,26 @@ void retrieve_response(int socket_fd, struct message* msg, char* target_dir, str
   }
 
   uint64_t data_lenbe = htobe64(payl->data_len);
+  uint64_t offset_be = htobe64(payl->offset);
 
   // Create a response.
   uint8_t* resp = malloc(29 + data_lenbe);
 
   // Seek the file to the offset, given by uint8_t* offset.
-  fseek(fp, payl->offset, SEEK_SET);
+  fseek(fp, offset_be, SEEK_SET);
 
   resp[0] = 0x70;
-  uint64_t paylen = 20 + payl->data_len;
-  uint64_t paylen_be = htobe64(paylen);
-  memcpy((resp + 1), &paylen_be, 8);
+  uint64_t paylen = 20 + data_lenbe;
+  memcpy((resp + 1), &paylen, 8);
 
   memcpy((resp + 9), &payl->session_id, 4);
   memcpy((resp + 13), &payl->offset, 8);
   memcpy((resp + 21), &payl->data_len, 8);
 
   // Read the contents of the file into the response.
-  fread((resp + 29), 1, payl->data_len, fp);
+  fread((resp + 29), data_lenbe, 1, fp);
 
-  write(socket_fd, resp, 29 + payl->data_len);
+  write(socket_fd, resp, 29 + data_lenbe);
 
   free(filepath);
   free(resp);

@@ -82,7 +82,6 @@ int retrieve_request(struct message* msg, struct six_type* payl) {
     memcpy(&payl->offset, (msg->payload + 4), 8);
     memcpy(&payl->data_len, (msg->payload + 12), 8);
     memcpy(payl->data, (msg->payload + 20), payl->var_len);
-    printf("%s\n", payl->data);
 
     return 1;
   } else {

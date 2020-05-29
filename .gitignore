@@ -3,3 +3,5 @@ client-*
 config_file
 client
 testing
+compression.dict
+sample-compression-dictionary-readable.txt
