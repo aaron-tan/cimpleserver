@@ -172,6 +172,7 @@ void retrieve_response(int socket_fd, struct message* msg, char* target_dir, str
 
   resp[0] = 0x70;
   uint64_t paylen = 20 + data_lenbe;
+  printf("Pay length in big endian: %lx\n", paylen);
   memcpy((resp + 1), &paylen, 8);
 
   memcpy((resp + 9), &payl->session_id, 4);
