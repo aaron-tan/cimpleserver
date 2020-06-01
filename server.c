@@ -10,7 +10,7 @@
 #include "conf/readconfig.h"
 #include "reqres/request.h"
 #include "reqres/response.h"
-// #include "reqres/compression.h"
+#include "reqres/compression.h"
 
 int main(int argc, char** argv) {
   if (argc < 2) {
@@ -65,16 +65,10 @@ int main(int argc, char** argv) {
   maxfd = serversocket_fd;
 
   // Read the compression dictionary.
-  // uint32_t* bit_array = read_compress("compression.dict");
-  // printf("%x\n", bit_array[2]);
-  // int bit = get_bit(bit_array, 35);
-  // if (bit) {
-  //   puts("Bit is 1");
-  // } else {
-  //   puts("Bit is 0");
-  // }
-  // create_dict(bit_array);
-  // create_huffman_tree(bit_array);
+  int file_size;
+  uint32_t* bit_array = read_compress("compression.dict", &file_size);
+
+  struct bit_code* code_dict = create_dict(bit_array, &file_size);
 
 	while (1) {
     // We do this because select changes the set so we use two sets to keep track of this change.
@@ -116,7 +110,8 @@ int main(int argc, char** argv) {
               shutdown(i, SHUT_RDWR);
             }
 
-            // free(bit_array);
+            free(code_dict);
+            free(bit_array);
             free(conf.dir);
             return 0;
           }
@@ -136,6 +131,11 @@ int main(int argc, char** argv) {
             recv(i, msg.payload, msg.payload_len, 0);
           }
 
+          // Check if payload is compressed, if it is decompress it.
+          if (is_compressed(msg.header)) {
+            decompress_payload(&msg, code_dict);
+          }
+
           if (invalid_check(msg.header)) {
             // Create an error response.
             uint8_t resp[9];
@@ -153,8 +153,18 @@ int main(int argc, char** argv) {
 
           if (echo_request(msg.header)) {
             // Send a echo response.
-            msg.header = 0x10;
-            echo_response(i, &msg);
+            if (requires_compression(msg.header) && !is_compressed(msg.header)) {
+              // If it requries compression and it's not compressed, compress msg.
+              msg.header = 0x18;
+              echo_response(i, &msg, 1, code_dict);
+            } else if (requires_compression(msg.header) && is_compressed(msg.header)) {
+              // If it is already compressed we don't compress twice.
+              msg.header = 0x18;
+              echo_response(i, &msg, 0, code_dict);
+            } else {
+              msg.header = 0x10;
+              echo_response(i, &msg, 0, code_dict);
+            }
           }
 
           if (dir_request(msg.header)) {

@@ -12,7 +12,12 @@ void err_response(uint8_t* err) {
   return;
 }
 
-void echo_response(int socket_fd, struct message* msg) {
+void echo_response(int socket_fd, struct message* msg, int compress, struct bit_code* dict) {
+  // If payload requires compression compress the payload.
+  if (compress) {
+    compress_payload(msg, dict);
+  }
+
   uint8_t* resp = malloc(9 + msg->payload_len);
   resp[0] = msg->header;
   uint64_t paylen_be = htobe64(msg->payload_len);

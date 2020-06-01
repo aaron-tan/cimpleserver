@@ -24,4 +24,10 @@ int size_request(uint8_t head);
 // and filename into the arguments given, then return 1 or 0.
 int retrieve_request(struct message* msg, struct six_type* payl);
 
+// Check the header to see if payload is compressed.
+int is_compressed(uint8_t head);
+
+// Check the header to see if the response is required to be compressed.
+int requires_compression(uint8_t head);
+
 #endif

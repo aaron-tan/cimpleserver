@@ -88,3 +88,19 @@ int retrieve_request(struct message* msg, struct six_type* payl) {
     return 0;
   }
 }
+
+int is_compressed(uint8_t head) {
+  if (head & 0x08) {
+    return 1;
+  } else {
+    return 0;
+  }
+}
+
+int requires_compression(uint8_t head) {
+  if (head & 0x04) {
+    return 1;
+  } else {
+    return 0;
+  }
+}

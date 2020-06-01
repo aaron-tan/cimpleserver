@@ -8,6 +8,7 @@
 #include <endian.h>
 #include <dirent.h>
 #include "../server.h"
+#include "compression.h"
 
 // The response files contains functions used in handling server responses.
 
@@ -15,7 +16,7 @@
 void err_response(uint8_t* err);
 
 // Construct an echo response with type 0x10 with the payload.
-void echo_response(int socket_fd, struct message* msg);
+void echo_response(int socket_fd, struct message* msg, int compress, struct bit_code* dict);
 
 // Construct a response to the directory request and get the filenames.
 void dir_response(int socket_fd, char* target, struct message* msg);
