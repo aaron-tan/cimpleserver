@@ -181,8 +181,13 @@ int main(int argc, char** argv) {
 
           if (size_request(msg.header)) {
             // Send a response with the file size.
-            msg.header = 0x50;
-            size_response(i, conf.dir, &msg);
+            if (requires_compression(msg.header)) {
+              msg.header = 0x58;
+              size_response(i, conf.dir, &msg, 1, code_dict);
+            } else {
+              msg.header = 0x50;
+              size_response(i, conf.dir, &msg, 0, code_dict);
+            }
           }
 
           /**Check if it is a retrieve file request, if it is split payload

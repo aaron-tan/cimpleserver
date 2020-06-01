@@ -17,18 +17,18 @@ void echo_response(int socket_fd, struct message* msg, int compress, struct bit_
   if (compress) {
     compress_payload(msg, dict);
   }
-  printf("Header: %hhx\n", msg->header);
-  printf("Payload len: %ld\n", msg->payload_len);
+  // printf("Header: %hhx\n", msg->header);
+  // printf("Payload len: %ld\n", msg->payload_len);
 
   uint8_t* resp = malloc(9 + msg->payload_len);
   resp[0] = msg->header;
   uint64_t paylen_be = htobe64(msg->payload_len);
-  printf("Payload len be: %ld\n", paylen_be);
+  // printf("Payload len be: %ld\n", paylen_be);
   memcpy((resp + 1), &paylen_be, 8);
   memcpy((resp + 9), msg->payload, msg->payload_len);
-  for (int i = 0; i < (9 + msg->payload_len); i++) {
-    printf("%hhx\n", resp[i]);
-  }
+  // for (int i = 0; i < (9 + msg->payload_len); i++) {
+  //   printf("%hhx\n", resp[i]);
+  // }
 
   write(socket_fd, resp, 9 + msg->payload_len);
 
@@ -130,7 +130,7 @@ void dir_response(int socket_fd, char* target, struct message* msg, int compress
 }
 
 
-void size_response(int socket_fd, char* target_dir, struct message* msg) {
+void size_response(int socket_fd, char* target_dir, struct message* msg, int compress, struct bit_code* dict) {
   struct stat buf;
   int ret;
   uint64_t len = msg->payload_len;
@@ -154,19 +154,26 @@ void size_response(int socket_fd, char* target_dir, struct message* msg) {
   uint64_t fsize = buf.st_size;
 
   // Construct the message.
-  uint8_t* resp = malloc(17);
-  resp[0] = msg->header;
+  // uint8_t* resp = malloc(17);
+  // resp[0] = msg->header;
 
   uint64_t paylen = 8;
-  uint64_t paylen_be = htobe64(paylen);
-  memcpy((resp + 1), &paylen_be, 8);
+  // uint64_t paylen_be = htobe64(paylen);
+  // memcpy((resp + 1), &paylen_be, 8);
+  memcpy(&msg->payload_len, &paylen, 8);
 
   uint64_t fsize_be = htobe64(fsize);
-  memcpy((resp + 9), &fsize_be, 8);
+  // memcpy((resp + 9), &fsize_be, 8);
+  memcpy(msg->payload, &fsize_be, 8);
 
-  write(socket_fd, resp, 17);
+  // write(socket_fd, resp, 17);
+  if (compress) {
+    echo_response(socket_fd, msg, 1, dict);
+  } else {
+    echo_response(socket_fd, msg, 0, dict);
+  }
 
-  free(resp);
+  // free(resp);
   free(filename);
   return;
 }
