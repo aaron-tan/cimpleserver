@@ -240,6 +240,12 @@ void compress_payload(struct message* msg, struct bit_code* dict) {
   // Copy bit padding length to the end.
   memcpy((msg->payload + (compress_len -1)), &padding, 1);
 
+  printf("%ld\n", msg->payload_len);
+
+  for (int i = 0; i < msg->payload_len; i++) {
+    printf("%hhx\n", msg->payload[i]);
+  }
+
   free(compress_payl);
   return;
 }

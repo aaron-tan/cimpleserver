@@ -17,12 +17,18 @@ void echo_response(int socket_fd, struct message* msg, int compress, struct bit_
   if (compress) {
     compress_payload(msg, dict);
   }
+  printf("Header: %hhx\n", msg->header);
+  printf("Payload len: %ld\n", msg->payload_len);
 
   uint8_t* resp = malloc(9 + msg->payload_len);
   resp[0] = msg->header;
   uint64_t paylen_be = htobe64(msg->payload_len);
+  printf("Payload len be: %ld\n", paylen_be);
   memcpy((resp + 1), &paylen_be, 8);
   memcpy((resp + 9), msg->payload, msg->payload_len);
+  for (int i = 0; i < (9 + msg->payload_len); i++) {
+    printf("%hhx\n", resp[i]);
+  }
 
   write(socket_fd, resp, 9 + msg->payload_len);
 
