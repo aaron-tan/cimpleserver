@@ -164,6 +164,7 @@ void size_response(int socket_fd, char* target_dir, struct message* msg, int com
 
   // uint64_t fsize_be = htobe64(fsize);
   // memcpy((resp + 9), &fsize_be, 8);
+  msg->payload = realloc(msg->payload, 8 * sizeof(uint8_t));
   memcpy(msg->payload, &fsize, 8);
 
   // write(socket_fd, resp, 17);
