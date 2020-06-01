@@ -169,8 +169,14 @@ int main(int argc, char** argv) {
 
           if (dir_request(msg.header)) {
             // Send a response with filenames in the payload.
-            msg.header = 0x30;
-            dir_response(i, conf.dir, &msg);
+            if (requires_compression(msg.header)) {
+              // Compress the msg.
+              msg.header = 0x38;
+              dir_response(i, conf.dir, &msg, 1, code_dict);
+            } else {
+              msg.header = 0x30;
+              dir_response(i, conf.dir, &msg, 0, code_dict);
+            }
           }
 
           if (size_request(msg.header)) {

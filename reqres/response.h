@@ -19,7 +19,7 @@ void err_response(uint8_t* err);
 void echo_response(int socket_fd, struct message* msg, int compress, struct bit_code* dict);
 
 // Construct a response to the directory request and get the filenames.
-void dir_response(int socket_fd, char* target, struct message* msg);
+void dir_response(int socket_fd, char* target, struct message* msg, int compress, struct bit_code* dict);
 
 // Construct a response for the file size query.
 void size_response(int socket_fd, char* target_dir, struct message* msg);
