@@ -67,41 +67,76 @@ void set_bit(uint8_t* bit_code, int bit_pos) {
   bit_code[arr_indx] = bit_code[arr_indx] | bit;
 }
 
-void create_huffman_tree(uint32_t* bit_arr) {
-  uint32_t length_le = bit_arr[0] & 0xff000000;
-  uint8_t length = (uint8_t) htobe32(length_le);
+void create_huffman_tree(struct bit_code* dict) {
   struct huffman_tree* root = malloc(sizeof(struct huffman_tree));
-  int offset = 8;
+  root->node_id = 0;
+  root->left = NULL;
+  root->right = NULL;
+  struct huffman_tree* cur = root;
+  // uint8_t id = 0;
 
-  while (offset != 44) {
-    for (int i = 0; i < length; i++) {
-      if (get_bit(bit_arr, offset, 32)) {
-        root->input_byte = NULL;
-        root->right = malloc(sizeof(struct huffman_tree));
-        root = root->right;
+  for (uint16_t i = 0x00; i < 0x100; i++) {
+    struct bit_code code = dict[i];
+    uint32_t code_32 = htobe32(*((uint32_t*) code.bit_code));
+    printf("%hhx\n", i);
+    printf("%x\n", code_32);
+
+    for (int k = 0; k < code.length; k++) {
+      if (get_bit(&code_32, k, 32)) {
+        if (cur->right == NULL) {
+          cur->right = malloc(sizeof(struct huffman_tree));
+          cur->right->left = NULL;
+          cur->right->right = NULL;
+        }
+
+        cur = cur->right;
+        cur->node_id = 'r';
+        // printf("%c", cur->node_id);
+        printf("1");
+
       } else {
-        root->input_byte = NULL;
-        root->left = malloc(sizeof(struct huffman_tree));
-        root = root->left;
+        if (cur->left == NULL) {
+          cur->left = malloc(sizeof(struct huffman_tree));
+          cur->left->left = NULL;
+          cur->left->right = NULL;
+        }
+
+        cur = cur->left;
+        cur->node_id = 'l';
+        // printf("%c", cur->node_id);
+        printf("0");
       }
-      offset += 1;
     }
 
-    root->input_byte = malloc(sizeof(uint8_t));
-    *(root->input_byte) = 0x00;
-
-    // Reset length.
-    length = 0;
-
-    for (int i = 0; i < 8; i++) {
-      length = length | (get_bit(bit_arr, offset, 32) << 8) >> (i + 1);
-      offset += 1;
+    cur->input_byte = i;
+    if (cur->left == NULL && cur->right == NULL) {
+      puts("Left and right are null");
     }
 
-    printf("Offset: %d\n", offset);
-    printf("Length: %hhx\n", length);
+    cur = root;
+    printf("\nGot here\n");
   }
 
+  // printf("Finished creating huffman tree\n");
+  // printf("Cur is at root %d\n", cur->node_id);
+  //
+  // struct stack* st = stack_init();
+  // struct huffman_tree* temp;
+  //
+  // while (!is_empty(st) || cur != NULL) {
+  //   if (cur != NULL) {
+  //     push(st, cur);
+  //     cur = cur->left;
+  //   } else {
+  //     cur = (struct huffman_tree*) pop(st);
+  //     temp = cur;
+  //     cur = cur->right;
+  //     free(temp);
+  //   }
+  // }
+  //
+  // printf("Finished freeing the tree\n");
+  // destroy_stack(st);
   return;
 }
 
@@ -137,11 +172,12 @@ struct bit_code* create_dict(uint32_t* bit_arr, int* file_size) {
     // printf("Length in loop: %hhx\n", lenbyte_be);
     // printf("%x\n", dict[i]);
 
-    code_arr[i].length = lenbyte_be;
-
     if (offset >= (*file_size * 8)) {
       break;
     }
+
+    code_arr[i].length = lenbyte_be;
+
     // Read the bit code.
     for (int j = 0; j < lenbyte_be; j++) {
       if (get_bit(bit_arr, offset, 32)) {

@@ -3,7 +3,7 @@ CFLAGS=-O0 -Wall -Werror -Werror=vla -g -std=gnu11 -lm -lpthread -lrt
 CLIENT_FLAGS=-O0 -Wall -Werror -g -std=gnu11 -fsanitize=address
 CFLAG_SAN=$(CFLAGS) -fsanitize=address
 DEPS=
-OBJ=readconfig.o request.o response.o compression.o
+OBJ=readconfig.o request.o response.o compression.o stack.o
 
 server: server.c $(OBJ)
 	$(GCC) -o $@ $^ $(CFLAG_SAN)
@@ -19,6 +19,9 @@ response.o: reqres/response.c reqres/response.c
 	$(GCC) -c -o $@ $< $(CFLAGS)
 
 compression.o: reqres/compression.c reqres/compression.h
+	$(GCC) -c -o $@ $< $(CFLAGS)
+
+stack.o: stack/stack.c stack/stack.h
 	$(GCC) -c -o $@ $< $(CFLAGS)
 
 client: client-scaffold.c
