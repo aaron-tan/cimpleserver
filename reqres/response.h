@@ -25,5 +25,6 @@ void dir_response(int socket_fd, char* target, struct message* msg, int compress
 void size_response(int socket_fd, char* target_dir, struct message* msg, int compress, struct bit_code* dict);
 
 // Send file data to the client. Passed in payload structure as arguments.
-void retrieve_response(int socket_fd, struct message* msg, char* target_dir, struct six_type* payl);
+void retrieve_response(int socket_fd, struct message* msg, char* target_dir,
+  struct six_type* payl, int compress, struct bit_code* dict);
 #endif

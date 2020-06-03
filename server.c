@@ -202,8 +202,26 @@ int main(int argc, char** argv) {
 
           if (retrieve_request(&msg, &payl)) {
             // Send the file as a response.
-            msg.header = 0x70;
-            retrieve_response(i, &msg, conf.dir, &payl);
+            if (requires_compression(msg.header) && !is_compressed(msg.header)) {
+              // If requires compression and it is not compressed, compress payload.
+              msg.header = 0x78;
+              retrieve_response(i, &msg, conf.dir, &payl, 1, code_dict);
+            } else if (requires_compression(msg.header) && is_compressed(msg.header)) {
+              // Decompress the payload to read the payload.
+              decompress_payload(&msg, root);
+
+              // Create the response and compress this new response.
+              msg.header = 0x78;
+              retrieve_response(i, &msg, conf.dir, &payl, 1, code_dict);
+            } else {
+              // Decompress the payload first.
+              if (is_compressed(msg.header)) {
+                decompress_payload(&msg, root);
+              }
+
+              msg.header = 0x70;
+              retrieve_response(i, &msg, conf.dir, &payl, 0, code_dict);
+            }
           }
 
           free(msg.payload);

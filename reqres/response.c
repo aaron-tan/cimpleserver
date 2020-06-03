@@ -179,7 +179,9 @@ void size_response(int socket_fd, char* target_dir, struct message* msg, int com
   return;
 }
 
-void retrieve_response(int socket_fd, struct message* msg, char* target_dir, struct six_type* payl) {
+void retrieve_response(int socket_fd, struct message* msg, char* target_dir,
+  struct six_type* payl, int compress, struct bit_code* dict) {
+
   struct stat buf;
   char* filepath = malloc(strlen(target_dir) + 1 + strlen(payl->data) + 1);
 
@@ -206,29 +208,40 @@ void retrieve_response(int socket_fd, struct message* msg, char* target_dir, str
   }
 
   // Create a response.
-  uint8_t* resp = malloc(29 + data_lenbe);
+  // uint8_t* resp = malloc(29 + data_lenbe);
+  msg->payload = realloc(msg->payload, 20 + data_lenbe);
 
   // Seek the file to the offset, given by uint8_t* offset.
   fseek(fp, offset_be, SEEK_SET);
 
-  resp[0] = 0x70;
+  // resp[0] = 0x70;
   uint64_t paylen_be = 20 + data_lenbe;
   // Convert to host byte order so that client receives in network order.
-  uint64_t paylen = be64toh(paylen_be);
+  // uint64_t paylen = be64toh(paylen_be);
   // printf("Pay length in big endian: %lx\n", paylen);
-  memcpy((resp + 1), &paylen, 8);
+  // memcpy((resp + 1), &paylen, 8);
+  memcpy(&msg->payload_len, &paylen_be, 8);
 
-  memcpy((resp + 9), &payl->session_id, 4);
-  memcpy((resp + 13), &payl->offset, 8);
-  memcpy((resp + 21), &payl->data_len, 8);
+  // memcpy((resp + 9), &payl->session_id, 4);
+  // memcpy((resp + 13), &payl->offset, 8);
+  // memcpy((resp + 21), &payl->data_len, 8);
+  memcpy(msg->payload, &payl->session_id, 4);
+  memcpy((msg->payload + 4), &payl->offset, 8);
+  memcpy((msg->payload + 12), &payl->data_len, 8);
 
   // Read the contents of the file into the response.
-  fread((resp + 29), data_lenbe, 1, fp);
+  // fread((resp + 29), data_lenbe, 1, fp);
+  fread((msg->payload + 20), data_lenbe, 1, fp);
 
-  write(socket_fd, resp, 29 + data_lenbe);
+  // write(socket_fd, resp, 29 + data_lenbe);
+  if (compress) {
+    echo_response(socket_fd, msg, 1, dict);
+  } else {
+    echo_response(socket_fd, msg, 0, dict);
+  }
 
   free(payl->data);
   free(filepath);
-  free(resp);
+  // free(resp);
   return;
 }
