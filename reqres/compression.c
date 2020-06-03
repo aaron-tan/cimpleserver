@@ -214,15 +214,6 @@ void decompress_payload(struct message* msg, struct huffman_tree* root) {
   // printf("Compressed bits: %ld\n", compressed_bits);
   // printf("Padding: %hhx\n", padding);
   // printf("Total bits: %d\n", total_bits);
-  printf("%hhx\n", msg->header);
-  uint8_t paylen[8];
-  memcpy(paylen, &msg->payload_len, 8);
-  for (int i = 0; i < 8; i++) {
-    printf("%hhx\n", paylen[i]);
-  }
-  for (int i = 0; i < msg->payload_len; i++) {
-    printf("%hhx\n", msg->payload[i]);
-  }
 
   struct huffman_tree* cur = root;
 
@@ -240,12 +231,10 @@ void decompress_payload(struct message* msg, struct huffman_tree* root) {
   memcpy(payload_32, msg->payload, msg->payload_len);
   // Need to figure out how to convert into big endian. For decompression to work.
   // Loop through the length of the 32 bit payload and convert to big endian.
-  printf("Payload length: %ld\n", msg->payload_len);
-  printf("Length: %f\n", ceil(msg->payload_len / 4.0));
+
   for (int i = 0; i < ceil(msg->payload_len / 4.0); i++) {
     uint32_t payload_32_be = htobe32(payload_32[i]);
     memcpy((payload_32 + i), &payload_32_be, 4);
-    printf("%x\n", payload_32[i]);
   }
   // printf("%x\n", payload_32[0]);
   // printf("%x\n", payload_32[1]);
