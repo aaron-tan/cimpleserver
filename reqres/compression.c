@@ -233,7 +233,10 @@ void decompress_payload(struct message* msg, struct huffman_tree* root) {
   // This is cutting off the payload.
   // uint32_t payload_32 = htobe32(*((uint32_t*) msg->payload));
   // printf("Payload 32 %x\n", payload_32);
-  uint32_t* payload_32 = malloc(msg->payload_len * sizeof(uint8_t));
+  uint64_t len = ceil(msg->payload_len / 4.0);
+
+  uint32_t* payload_32 = malloc(len * sizeof(uint32_t));
+  memset(payload_32, 0, len * sizeof(uint32_t));
   memcpy(payload_32, msg->payload, msg->payload_len);
   // Need to figure out how to convert into big endian. For decompression to work.
   // Loop through the length of the 32 bit payload and convert to big endian.
