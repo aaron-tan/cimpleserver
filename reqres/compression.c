@@ -214,6 +214,9 @@ void decompress_payload(struct message* msg, struct huffman_tree* root) {
   // printf("Compressed bits: %ld\n", compressed_bits);
   // printf("Padding: %hhx\n", padding);
   // printf("Total bits: %d\n", total_bits);
+  for (int i = 0; i < msg->payload_len; i++) {
+    printf("%hhx\n", msg->payload[i]);
+  }
 
   struct huffman_tree* cur = root;
 
