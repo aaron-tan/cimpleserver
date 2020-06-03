@@ -6,11 +6,12 @@
 #include <inttypes.h>
 #include <math.h>
 #include "../server.h"
-// #include "../stack/stack.h"
+#include "../stack/stack.h"
 
 struct huffman_tree {
   uint8_t input_byte;
   uint8_t node_id;
+  int internal;
   struct huffman_tree* left;
   struct huffman_tree* right;
 };
@@ -30,13 +31,16 @@ int get_bit(uint32_t* bit_arr, int bit_pos, int bit_num);
 void set_bit(uint8_t* bit_code, int bit_pos);
 
 // Create a huffman tree for decompression.
-void create_huffman_tree(struct bit_code* dict);
+struct huffman_tree* create_huffman_tree(struct bit_code* dict);
+
+// Free the huffman tree after use.
+void destroy_huffman_tree(struct huffman_tree* root);
 
 // Create a dictionary to use for compression.
 struct bit_code* create_dict(uint32_t* bit_arr, int* file_size);
 
 // Decompress the message payload.
-void decompress_payload(struct message* msg, struct bit_code* dict);
+void decompress_payload(struct message* msg, struct huffman_tree* root);
 
 // Compress the message payload.
 void compress_payload(struct message* msg, struct bit_code* dict);

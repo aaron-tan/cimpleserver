@@ -67,9 +67,10 @@ void set_bit(uint8_t* bit_code, int bit_pos) {
   bit_code[arr_indx] = bit_code[arr_indx] | bit;
 }
 
-void create_huffman_tree(struct bit_code* dict) {
+struct huffman_tree* create_huffman_tree(struct bit_code* dict) {
   struct huffman_tree* root = malloc(sizeof(struct huffman_tree));
   root->node_id = 0;
+  root->internal = 2;
   root->left = NULL;
   root->right = NULL;
   struct huffman_tree* cur = root;
@@ -78,8 +79,8 @@ void create_huffman_tree(struct bit_code* dict) {
   for (uint16_t i = 0x00; i < 0x100; i++) {
     struct bit_code code = dict[i];
     uint32_t code_32 = htobe32(*((uint32_t*) code.bit_code));
-    printf("%hhx\n", i);
-    printf("%x\n", code_32);
+    // printf("%hhx\n", i);
+    // printf("%x\n", code_32);
 
     for (int k = 0; k < code.length; k++) {
       if (get_bit(&code_32, k, 32)) {
@@ -90,9 +91,10 @@ void create_huffman_tree(struct bit_code* dict) {
         }
 
         cur = cur->right;
+        cur->internal = 1;
         cur->node_id = 'r';
         // printf("%c", cur->node_id);
-        printf("1");
+        // printf("1");
 
       } else {
         if (cur->left == NULL) {
@@ -102,41 +104,43 @@ void create_huffman_tree(struct bit_code* dict) {
         }
 
         cur = cur->left;
+        cur->internal = 1;
         cur->node_id = 'l';
         // printf("%c", cur->node_id);
-        printf("0");
+        // printf("0");
       }
     }
 
     cur->input_byte = i;
-    if (cur->left == NULL && cur->right == NULL) {
-      puts("Left and right are null");
-    }
+    cur->internal = 0;
 
     cur = root;
-    printf("\nGot here\n");
+    // printf("\nGot here\n");
   }
 
   // printf("Finished creating huffman tree\n");
   // printf("Cur is at root %d\n", cur->node_id);
-  //
-  // struct stack* st = stack_init();
-  // struct huffman_tree* temp;
-  //
-  // while (!is_empty(st) || cur != NULL) {
-  //   if (cur != NULL) {
-  //     push(st, cur);
-  //     cur = cur->left;
-  //   } else {
-  //     cur = (struct huffman_tree*) pop(st);
-  //     temp = cur;
-  //     cur = cur->right;
-  //     free(temp);
-  //   }
-  // }
-  //
-  // printf("Finished freeing the tree\n");
-  // destroy_stack(st);
+  return root;
+}
+
+void destroy_huffman_tree(struct huffman_tree* root) {
+  struct huffman_tree* cur = root;
+  struct stack* st = stack_init();
+  struct huffman_tree* temp;
+
+  while (!is_empty(st) || cur != NULL) {
+    if (cur != NULL) {
+      push(st, cur);
+      cur = cur->left;
+    } else {
+      cur = (struct huffman_tree*) pop(st);
+      temp = cur;
+      cur = cur->right;
+      free(temp);
+    }
+  }
+
+  destroy_stack(st);
   return;
 }
 
@@ -202,8 +206,79 @@ struct bit_code* create_dict(uint32_t* bit_arr, int* file_size) {
   return code_arr;
 }
 
-void decompress_payload(struct message* msg, struct bit_code* dict) {
-  // TODO
+void decompress_payload(struct message* msg, struct huffman_tree* root) {
+  // Calculate the total number of bits in the compressed payload (except padding)
+  uint64_t compressed_bits = (msg->payload_len - 1) * 8;
+  uint8_t padding = msg->payload[msg->payload_len - 1];
+  uint8_t total_bits = compressed_bits - padding;
+  // printf("Compressed bits: %ld\n", compressed_bits);
+  // printf("Padding: %hhx\n", padding);
+  // printf("Total bits: %d\n", total_bits);
+
+  struct huffman_tree* cur = root;
+
+  uint64_t decomp_len = 0;
+  int decomp_cap = 1;
+  uint8_t* decomp_payl = malloc(sizeof(*decomp_payl));
+
+  // This is cutting off the payload.
+  // uint32_t payload_32 = htobe32(*((uint32_t*) msg->payload));
+  // printf("Payload 32 %x\n", payload_32);
+  uint32_t* payload_32 = malloc(msg->payload_len * sizeof(uint8_t));
+  memcpy(payload_32, msg->payload, msg->payload_len);
+  // Need to figure out how to convert into big endian. For decompression to work.
+  // Loop through the length of the 32 bit payload and convert to big endian.
+  // printf("%f\n", ceil(msg->payload_len / 4.0));
+  for (int i = 0; i < ceil(msg->payload_len / 4.0); i++) {
+    uint32_t payload_32_be = htobe32(payload_32[i]);
+    memcpy((payload_32 + i), &payload_32_be, 4);
+  }
+  // printf("%x\n", payload_32[0]);
+  // printf("%x\n", payload_32[1]);
+
+  for (int i = 0; i < total_bits; i++) {
+    if (get_bit(payload_32, i, 32)) {
+      cur = cur->right;
+
+      if (!cur->internal) {
+        // printf("In right: %hhx\n", cur->input_byte);
+        memcpy((decomp_payl + decomp_len), &cur->input_byte, 1);
+        decomp_len += 1;
+
+        // Resize the payload.
+        decomp_cap += 1;
+        decomp_payl = realloc(decomp_payl, decomp_cap * sizeof(*(decomp_payl)));
+
+        cur = root;
+      }
+    } else {
+      cur = cur->left;
+
+      if (!cur->internal) {
+        // printf("\nIn left: %hhx\n", cur->input_byte);
+        memcpy((decomp_payl + decomp_len), &cur->input_byte, 1);
+        decomp_len += 1;
+
+        // Resize the payload.
+        decomp_cap += 1;
+        decomp_payl = realloc(decomp_payl, decomp_cap * sizeof(*(decomp_payl)));
+
+        cur = root;
+      }
+    }
+  }
+
+  msg->payload = realloc(msg->payload, decomp_len * sizeof(*msg->payload));
+
+  memcpy(&msg->payload_len, &decomp_len, 8);
+  memcpy(msg->payload, decomp_payl, decomp_len);
+
+  // for (int i = 0; i < decomp_len; i++) {
+  //   printf("%hhx\n", decomp_payl[i]);
+  // }
+
+  free(payload_32);
+  free(decomp_payl);
   return;
 }
 

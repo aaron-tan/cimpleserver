@@ -70,6 +70,8 @@ int main(int argc, char** argv) {
 
   struct bit_code* code_dict = create_dict(bit_array, &file_size);
 
+  struct huffman_tree* root = create_huffman_tree(code_dict);
+
 	while (1) {
     // We do this because select changes the set so we use two sets to keep track of this change.
     read_fds = master;
@@ -110,6 +112,7 @@ int main(int argc, char** argv) {
               shutdown(i, SHUT_RDWR);
             }
 
+            destroy_huffman_tree(root);
             free(code_dict);
             free(bit_array);
             free(conf.dir);
@@ -129,11 +132,6 @@ int main(int argc, char** argv) {
 
           if (msg.payload_len != 0) {
             recv(i, msg.payload, msg.payload_len, 0);
-          }
-
-          // Check if payload is compressed, if it is decompress it.
-          if (is_compressed(msg.header)) {
-            decompress_payload(&msg, code_dict);
           }
 
           if (invalid_check(msg.header)) {
@@ -162,6 +160,12 @@ int main(int argc, char** argv) {
               msg.header = 0x18;
               echo_response(i, &msg, 0, code_dict);
             } else {
+              // Check if payload is compressed, if it is decompress it.
+              if (is_compressed(msg.header)) {
+                decompress_payload(&msg, root);
+                msg.header = msg.header & 0x08;
+              }
+
               msg.header = 0x10;
               echo_response(i, &msg, 0, code_dict);
             }
