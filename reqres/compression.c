@@ -237,7 +237,8 @@ void decompress_payload(struct message* msg, struct huffman_tree* root) {
   memcpy(payload_32, msg->payload, msg->payload_len);
   // Need to figure out how to convert into big endian. For decompression to work.
   // Loop through the length of the 32 bit payload and convert to big endian.
-  // printf("%f\n", ceil(msg->payload_len / 4.0));
+  printf("Payload length: %ld\n", msg->payload_len);
+  printf("Length: %f\n", ceil(msg->payload_len / 4.0));
   for (int i = 0; i < ceil(msg->payload_len / 4.0); i++) {
     uint32_t payload_32_be = htobe32(payload_32[i]);
     memcpy((payload_32 + i), &payload_32_be, 4);
