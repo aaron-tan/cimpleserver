@@ -214,6 +214,12 @@ void decompress_payload(struct message* msg, struct huffman_tree* root) {
   // printf("Compressed bits: %ld\n", compressed_bits);
   // printf("Padding: %hhx\n", padding);
   // printf("Total bits: %d\n", total_bits);
+  printf("%hhx\n", msg->header);
+  uint8_t paylen[8];
+  memcpy(paylen, &msg->payload_len, 8);
+  for (int i = 0; i < 8; i++) {
+    printf("%hhx\n", paylen[i]);
+  }
   for (int i = 0; i < msg->payload_len; i++) {
     printf("%hhx\n", msg->payload[i]);
   }
@@ -235,6 +241,7 @@ void decompress_payload(struct message* msg, struct huffman_tree* root) {
   for (int i = 0; i < ceil(msg->payload_len / 4.0); i++) {
     uint32_t payload_32_be = htobe32(payload_32[i]);
     memcpy((payload_32 + i), &payload_32_be, 4);
+    printf("%x\n", payload_32[i]);
   }
   // printf("%x\n", payload_32[0]);
   // printf("%x\n", payload_32[1]);
