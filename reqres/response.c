@@ -183,12 +183,12 @@ void retrieve_response(int socket_fd, struct message* msg, char* target_dir,
   struct six_type* payl, int compress, struct bit_code* dict) {
 
   struct stat buf;
-  char* filepath = malloc((strlen(target_dir) + 1) + payl->data_len);
+  char* filepath = malloc((strlen(target_dir) + 1) + strlen(payl->data));
 
   memcpy(filepath, target_dir, strlen(target_dir));
   filepath[strlen(target_dir)] = '/';
 
-  memcpy((filepath + strlen(target_dir) + 1), payl->data, payl->data_len);
+  memcpy((filepath + strlen(target_dir) + 1), payl->data, (strlen(payl->data) + 1));
 
   FILE* fp = fopen(filepath, "rb");
   stat(filepath, &buf);
