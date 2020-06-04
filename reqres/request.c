@@ -81,20 +81,6 @@ int retrieve_request(struct message* msg, struct six_type* payl, struct huffman_
 
   payl->var_len = (msg->payload_len - 20);
 
-  printf("Header: %hhx\n", msg->header);
-
-  uint8_t paylen[8];
-  memcpy(paylen, &msg->payload_len, 8);
-
-  for (int i = 0; i < 8; i++) {
-    printf("Payload length bytes: %hhx\n", paylen[i]);
-  }
-
-  for (int i = 0; i < msg->payload_len; i++) {
-    printf("Payload: %hhx\n", msg->payload[i]);
-  }
-  printf("Var len: %d\n", payl->var_len);
-
   if (type == 0x6) {
     payl->data = malloc(payl->var_len);
 
