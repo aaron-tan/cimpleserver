@@ -210,10 +210,24 @@ void decompress_payload(struct message* msg, struct huffman_tree* root) {
   // Calculate the total number of bits in the compressed payload (except padding)
   uint64_t compressed_bits = (msg->payload_len - 1) * 8;
   uint8_t padding = msg->payload[msg->payload_len - 1];
-  uint8_t total_bits = compressed_bits - padding;
+  uint64_t total_bits = compressed_bits - padding;
   // printf("Compressed bits: %ld\n", compressed_bits);
   // printf("Padding: %hhx\n", padding);
-  // printf("Total bits: %d\n", total_bits);
+  // printf("Total bits: %ld\n", total_bits);
+  //
+  // // Print out the message.
+  // puts("In decompress function");
+  // printf("Header: %hhx\n", msg->header);
+  // uint8_t paylen[8];
+  // memcpy(paylen, &msg->payload_len, 8);
+  //
+  // for (int i = 0; i < 8; i++) {
+  //   printf("Payload length bytes: %hhx\n", paylen[i]);
+  // }
+  //
+  // for (int i = 0; i < msg->payload_len; i++) {
+  //   printf("Payload: %hhx\n", msg->payload[i]);
+  // }
 
   struct huffman_tree* cur = root;
 
@@ -244,7 +258,7 @@ void decompress_payload(struct message* msg, struct huffman_tree* root) {
       cur = cur->right;
 
       if (!cur->internal) {
-        // printf("In right: %hhx\n", cur->input_byte);
+        // printf("\nIn right: %hhx\n", cur->input_byte);
         memcpy((decomp_payl + decomp_len), &cur->input_byte, 1);
         decomp_len += 1;
 
@@ -276,6 +290,7 @@ void decompress_payload(struct message* msg, struct huffman_tree* root) {
   memcpy(&msg->payload_len, &decomp_len, 8);
   memcpy(msg->payload, decomp_payl, decomp_len);
 
+  // puts("Decompressed payload");
   // for (int i = 0; i < decomp_len; i++) {
   //   printf("%hhx\n", decomp_payl[i]);
   // }
@@ -296,10 +311,24 @@ void compress_payload(struct message* msg, struct bit_code* dict) {
   memset(compress_payl, 0, sizeof(uint8_t));
   uint8_t* temp_comppayl = NULL;
 
+  // puts("In compress function");
+  //
+  // printf("Header: %hhx\n", msg->header);
+  // uint8_t* paylen = (uint8_t*) &msg->payload_len;
+  //
+  // for (int i = 0; i < 8; i++) {
+  //   printf("Payload length bytes: %hhx\n", paylen[i]);
+  // }
+  //
+  // for (int i = 0; i < msg->payload_len; i++) {
+  //   printf("Payload %hhx\n", msg->payload[i]);
+  // }
+
   // Get each byte in the payload and get its compression bit code.
   for (int i = 0; i < msg->payload_len; i++) {
     // Get the payload byte.
     uint8_t payl_byte = msg->payload[i];
+    // printf("Payload byte: %hhx, Code: ", payl_byte);
 
     // Get the length of its compression bit code.
     uint8_t len = dict[payl_byte].length;
@@ -334,9 +363,9 @@ void compress_payload(struct message* msg, struct bit_code* dict) {
       // compress_len += 1;
       // compress_payl = realloc(compress_payl, compress_cap * sizeof(uint8_t));
     }
-
+    // puts("");
   }
-
+  // puts("End of loop in compression function");
   // Compress length is the capacity of the compressed payload.
   compress_len = compress_cap;
 

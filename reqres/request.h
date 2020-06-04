@@ -2,6 +2,7 @@
 #define REQ_H
 #include <string.h>
 #include "../server.h"
+#include "compression.h"
 
 // The request files contains functions used to handle all client requests.
 
@@ -22,7 +23,7 @@ int size_request(uint8_t head);
 
 // Check if it is a retrieve request. If it is, copy session id, offset, data length
 // and filename into the arguments given, then return 1 or 0.
-int retrieve_request(struct message* msg, struct six_type* payl);
+int retrieve_request(struct message* msg, struct six_type* payl, struct huffman_tree* root);
 
 // Check the header to see if payload is compressed.
 int is_compressed(uint8_t head);

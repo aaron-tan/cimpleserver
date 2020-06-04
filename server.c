@@ -198,13 +198,13 @@ int main(int argc, char** argv) {
           * into the struct payl given, representing its corresponding name.
           */
           struct six_type payl;
-          payl.var_len = (msg.payload_len - 20);
 
-          if (is_compressed(msg.header)) {
-            decompress_payload(&msg, root);
-          }
+          // if (is_compressed(msg.header)) {
+          //   decompress_payload(&msg, root);
+          // }
+          // payl.var_len = (msg.payload_len - 20);
 
-          if (retrieve_request(&msg, &payl)) {
+          if (retrieve_request(&msg, &payl, root)) {
             // Send the file as a response.
             if (requires_compression(msg.header) && !is_compressed(msg.header)) {
               // If requires compression and it is not compressed, compress payload.

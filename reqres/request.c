@@ -70,10 +70,16 @@ int size_request(uint8_t head) {
   }
 }
 
-int retrieve_request(struct message* msg, struct six_type* payl) {
+int retrieve_request(struct message* msg, struct six_type* payl, struct huffman_tree* root) {
   // Check the type digit.
   uint8_t type = msg->header & 0xf0;
   type = type >> 4;
+
+  if (is_compressed(msg->header)) {
+    decompress_payload(msg, root);
+  }
+
+  payl->var_len = (msg->payload_len - 20);
 
   printf("Header: %hhx\n", msg->header);
 
@@ -87,6 +93,7 @@ int retrieve_request(struct message* msg, struct six_type* payl) {
   for (int i = 0; i < msg->payload_len; i++) {
     printf("Payload: %hhx\n", msg->payload[i]);
   }
+  printf("Var len: %d\n", payl->var_len);
 
   if (type == 0x6) {
     payl->data = malloc(payl->var_len);
