@@ -200,6 +200,10 @@ int main(int argc, char** argv) {
           struct six_type payl;
           payl.var_len = (msg.payload_len - 20);
 
+          if (is_compressed(msg.header)) {
+            decompress_payload(&msg, root);
+          }
+
           if (retrieve_request(&msg, &payl)) {
             // Send the file as a response.
             if (requires_compression(msg.header) && !is_compressed(msg.header)) {
@@ -215,9 +219,9 @@ int main(int argc, char** argv) {
               retrieve_response(i, &msg, conf.dir, &payl, 1, code_dict);
             } else {
               // Decompress the payload first.
-              if (is_compressed(msg.header)) {
-                decompress_payload(&msg, root);
-              }
+              // if (is_compressed(msg.header)) {
+              //   decompress_payload(&msg, root);
+              // }
 
               msg.header = 0x70;
               retrieve_response(i, &msg, conf.dir, &payl, 0, code_dict);
