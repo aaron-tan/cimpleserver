@@ -41,9 +41,6 @@ int get_bit(uint32_t* bit_arr, int bit_pos, int bit_num) {
   unsigned int bit = (1 << (bit_num - 1));
 
   int mask = bit >> bit_shift;
-  // printf("Mask: %x\n", mask);
-  // Get the bit at the position.
-  // mask = bit_arr[arr_indx] & mask;
 
   if (bit_arr[arr_indx] & mask) {
     return 1;
@@ -51,10 +48,6 @@ int get_bit(uint32_t* bit_arr, int bit_pos, int bit_num) {
     return 0;
   }
 
-  // Shift to right to the original.
-  // mask = mask >> (31 - bit_shift);
-
-  // return mask;
 }
 
 void set_bit(uint8_t* bit_code, int bit_pos) {
@@ -74,13 +67,10 @@ struct huffman_tree* create_huffman_tree(struct bit_code* dict) {
   root->left = NULL;
   root->right = NULL;
   struct huffman_tree* cur = root;
-  // uint8_t id = 0;
 
   for (uint16_t i = 0x00; i < 0x100; i++) {
     struct bit_code code = dict[i];
     uint32_t code_32 = htobe32(*((uint32_t*) code.bit_code));
-    // printf("%hhx\n", i);
-    // printf("%x\n", code_32);
 
     for (int k = 0; k < code.length; k++) {
       if (get_bit(&code_32, k, 32)) {
@@ -93,8 +83,6 @@ struct huffman_tree* create_huffman_tree(struct bit_code* dict) {
         cur = cur->right;
         cur->internal = 1;
         cur->node_id = 'r';
-        // printf("%c", cur->node_id);
-        // printf("1");
 
       } else {
         if (cur->left == NULL) {
@@ -106,8 +94,6 @@ struct huffman_tree* create_huffman_tree(struct bit_code* dict) {
         cur = cur->left;
         cur->internal = 1;
         cur->node_id = 'l';
-        // printf("%c", cur->node_id);
-        // printf("0");
       }
     }
 
@@ -115,11 +101,8 @@ struct huffman_tree* create_huffman_tree(struct bit_code* dict) {
     cur->internal = 0;
 
     cur = root;
-    // printf("\nGot here\n");
   }
 
-  // printf("Finished creating huffman tree\n");
-  // printf("Cur is at root %d\n", cur->node_id);
   return root;
 }
 
@@ -145,21 +128,12 @@ void destroy_huffman_tree(struct huffman_tree* root) {
 }
 
 struct bit_code* create_dict(uint32_t* bit_arr, int* file_size) {
-  // uint32_t dict[256];
-  // memset(dict, 0, 1024);
-
   struct bit_code* code_arr = malloc(256 * sizeof(struct bit_code));
   memset(code_arr, 0, 256 * sizeof(struct bit_code));
-  // uint32_t length = bit_arr[0] & 0xff000000;
+
   int offset = 0;
 
-  // Convert this to big endian.
-  // uint32_t len_be = htobe32(length);
-
-  // Convert to a byte.
-  // uint8_t lenbyte_be = (uint8_t) len_be;
   uint8_t lenbyte_be = 0;
-  // printf("Length %hhx\n", lenbyte_be);
 
   for (uint8_t i = 0x00; i < 0x100; i++) {
     // Reset the length.
@@ -173,9 +147,6 @@ struct bit_code* create_dict(uint32_t* bit_arr, int* file_size) {
       offset += 1;
     }
 
-    // printf("Length in loop: %hhx\n", lenbyte_be);
-    // printf("%x\n", dict[i]);
-
     if (offset >= (*file_size * 8)) {
       break;
     }
@@ -185,22 +156,10 @@ struct bit_code* create_dict(uint32_t* bit_arr, int* file_size) {
     // Read the bit code.
     for (int j = 0; j < lenbyte_be; j++) {
       if (get_bit(bit_arr, offset, 32)) {
-        // dict[i] = dict[i] | 0x80000000 >> j;
         set_bit(code_arr[i].bit_code, j);
       }
       offset += 1;
     }
-
-    // printf("Dict %hhx: %x\n", i, dict[i]);
-    // printf("Length code %hhx\n", code_arr[i].length);
-
-    // printf("Code arr %hhx: ", i);
-    // for (int k = 0; k < ceil(code_arr[i].length / 8.0); k++) {
-    //   printf("%hhx", code_arr[i].bit_code[k]);
-    // }
-    // puts("");
-    // printf("\nOffset in loop: %d\n", offset);
-
   }
 
   return code_arr;
@@ -211,23 +170,6 @@ void decompress_payload(struct message* msg, struct huffman_tree* root) {
   uint64_t compressed_bits = (msg->payload_len - 1) * 8;
   uint8_t padding = msg->payload[msg->payload_len - 1];
   uint64_t total_bits = compressed_bits - padding;
-  // printf("Compressed bits: %ld\n", compressed_bits);
-  // printf("Padding: %hhx\n", padding);
-  // printf("Total bits: %ld\n", total_bits);
-  //
-  // // Print out the message.
-  // puts("In decompress function");
-  // printf("Header: %hhx\n", msg->header);
-  // uint8_t paylen[8];
-  // memcpy(paylen, &msg->payload_len, 8);
-  //
-  // for (int i = 0; i < 8; i++) {
-  //   printf("Payload length bytes: %hhx\n", paylen[i]);
-  // }
-  //
-  // for (int i = 0; i < msg->payload_len; i++) {
-  //   printf("Payload: %hhx\n", msg->payload[i]);
-  // }
 
   struct huffman_tree* cur = root;
 
@@ -235,30 +177,23 @@ void decompress_payload(struct message* msg, struct huffman_tree* root) {
   int decomp_cap = 1;
   uint8_t* decomp_payl = malloc(sizeof(*decomp_payl));
 
-  // This is cutting off the payload.
-  // uint32_t payload_32 = htobe32(*((uint32_t*) msg->payload));
-  // printf("Payload 32 %x\n", payload_32);
   uint64_t len = ceil(msg->payload_len / 4.0);
 
   uint32_t* payload_32 = malloc(len * sizeof(uint32_t));
   memset(payload_32, 0, len * sizeof(uint32_t));
   memcpy(payload_32, msg->payload, msg->payload_len);
-  // Need to figure out how to convert into big endian. For decompression to work.
-  // Loop through the length of the 32 bit payload and convert to big endian.
 
+  // Use a loop to convert to big endian.
   for (int i = 0; i < ceil(msg->payload_len / 4.0); i++) {
     uint32_t payload_32_be = htobe32(payload_32[i]);
     memcpy((payload_32 + i), &payload_32_be, 4);
   }
-  // printf("%x\n", payload_32[0]);
-  // printf("%x\n", payload_32[1]);
 
   for (int i = 0; i < total_bits; i++) {
     if (get_bit(payload_32, i, 32)) {
       cur = cur->right;
 
       if (!cur->internal) {
-        // printf("\nIn right: %hhx\n", cur->input_byte);
         memcpy((decomp_payl + decomp_len), &cur->input_byte, 1);
         decomp_len += 1;
 
@@ -272,7 +207,6 @@ void decompress_payload(struct message* msg, struct huffman_tree* root) {
       cur = cur->left;
 
       if (!cur->internal) {
-        // printf("\nIn left: %hhx\n", cur->input_byte);
         memcpy((decomp_payl + decomp_len), &cur->input_byte, 1);
         decomp_len += 1;
 
@@ -290,11 +224,6 @@ void decompress_payload(struct message* msg, struct huffman_tree* root) {
   memcpy(&msg->payload_len, &decomp_len, 8);
   memcpy(msg->payload, decomp_payl, decomp_len);
 
-  // puts("Decompressed payload");
-  // for (int i = 0; i < decomp_len; i++) {
-  //   printf("%hhx\n", decomp_payl[i]);
-  // }
-
   free(payload_32);
   free(decomp_payl);
   return;
@@ -311,24 +240,10 @@ void compress_payload(struct message* msg, struct bit_code* dict) {
   memset(compress_payl, 0, sizeof(uint8_t));
   uint8_t* temp_comppayl = NULL;
 
-  // puts("In compress function");
-  //
-  // printf("Header: %hhx\n", msg->header);
-  // uint8_t* paylen = (uint8_t*) &msg->payload_len;
-  //
-  // for (int i = 0; i < 8; i++) {
-  //   printf("Payload length bytes: %hhx\n", paylen[i]);
-  // }
-  //
-  // for (int i = 0; i < msg->payload_len; i++) {
-  //   printf("Payload %hhx\n", msg->payload[i]);
-  // }
-
   // Get each byte in the payload and get its compression bit code.
   for (int i = 0; i < msg->payload_len; i++) {
     // Get the payload byte.
     uint8_t payl_byte = msg->payload[i];
-    // printf("Payload byte: %hhx, Code: ", payl_byte);
 
     // Get the length of its compression bit code.
     uint8_t len = dict[payl_byte].length;
@@ -337,7 +252,6 @@ void compress_payload(struct message* msg, struct bit_code* dict) {
 
     // For each of the bytes of the bit code add to compress_payl.
     for (int k = 0; k < len; k++) {
-      // memcpy((compress_payl + compress_len), &dict[payl_byte].bit_code[k], 1);
       if (byte_ctr == 8) {
         compress_len += 1;
         temp_compcap = compress_cap;
@@ -356,16 +270,11 @@ void compress_payload(struct message* msg, struct bit_code* dict) {
         set_bit(compress_payl, code_offset);
       }
 
-      // Resize the compressed payload.
-      // compress_cap += 1;
       code_offset += 1;
       byte_ctr += 1;
-      // compress_len += 1;
-      // compress_payl = realloc(compress_payl, compress_cap * sizeof(uint8_t));
     }
-    // puts("");
   }
-  // puts("End of loop in compression function");
+
   // Compress length is the capacity of the compressed payload.
   compress_len = compress_cap;
 
@@ -382,12 +291,6 @@ void compress_payload(struct message* msg, struct bit_code* dict) {
 
   // Copy bit padding length to the end.
   memcpy((msg->payload + (compress_len -1)), &padding, 1);
-
-  // printf("%ld\n", msg->payload_len);
-
-  // for (int i = 0; i < msg->payload_len; i++) {
-  //   printf("%hhx\n", msg->payload[i]);
-  // }
 
   free(compress_payl);
   return;
