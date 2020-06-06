@@ -104,7 +104,6 @@ int main(int argc, char** argv) {
       // Otherwise we have activity on existing connections. Handle them.
       for (int i = 0; i <= maxfd; i++) {
         if (FD_ISSET(i, &read_fds)) {
-          printf("Connection: %d\n", i);
           // Get client request and read as a message.
           if (recv(i, &msg.header, 1, 0) == 0) {
             close(i);

@@ -190,7 +190,7 @@ int multiplex_handling(FILE* sessionsp, struct six_type* payl, int socket_fd) {
   uint32_t session_id = 0;
   char* filename = malloc(sesh_buf.st_size + 1);
   memset(filename, 0, sesh_buf.st_size + 1);
-  printf("%ld\n", sesh_buf.st_size);
+
   fread(&session_id, 4, 1, sessionsp);
   fread(filename, 1, sesh_buf.st_size - 4, sessionsp);
 
@@ -201,6 +201,7 @@ int multiplex_handling(FILE* sessionsp, struct six_type* payl, int socket_fd) {
       write(socket_fd, empty, 9);
       rewind(sessionsp);
 
+      free(payl->data);
       free(filename);
       return 1;
     } else {
@@ -210,6 +211,7 @@ int multiplex_handling(FILE* sessionsp, struct six_type* payl, int socket_fd) {
       write(socket_fd, error, 9);
       rewind(sessionsp);
 
+      free(payl->data);
       free(filename);
       return 1;
     }
@@ -221,9 +223,6 @@ int multiplex_handling(FILE* sessionsp, struct six_type* payl, int socket_fd) {
   fwrite(payl->data, 1, strlen(payl->data) + 1, sessionsp);
 
   rewind(sessionsp);
-
-  printf("Session id: %x\n", session_id);
-  printf("Filename: %s\n", filename);
 
   free(filename);
   return 0;
