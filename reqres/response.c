@@ -201,6 +201,7 @@ int multiplex_handling(FILE* sessionsp, struct six_type* payl, int socket_fd) {
       write(socket_fd, empty, 9);
       rewind(sessionsp);
 
+      free(filename);
       return 1;
     } else {
       // Same session id and different filename so send an error.
@@ -209,6 +210,7 @@ int multiplex_handling(FILE* sessionsp, struct six_type* payl, int socket_fd) {
       write(socket_fd, error, 9);
       rewind(sessionsp);
 
+      free(filename);
       return 1;
     }
   }
