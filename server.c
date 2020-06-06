@@ -72,6 +72,12 @@ int main(int argc, char** argv) {
 
   struct huffman_tree* root = create_huffman_tree(code_dict);
 
+  FILE* sessionsp = fopen("./sessions", "wb+");
+
+  if (sessionsp == NULL) {
+    perror("Error creating/opening sessions file");
+  }
+
 	while (1) {
     // We do this because select changes the set so we use two sets to keep track of this change.
     read_fds = master;
@@ -98,6 +104,7 @@ int main(int argc, char** argv) {
       // Otherwise we have activity on existing connections. Handle them.
       for (int i = 0; i <= maxfd; i++) {
         if (FD_ISSET(i, &read_fds)) {
+          printf("Connection: %d\n", i);
           // Get client request and read as a message.
           if (recv(i, &msg.header, 1, 0) == 0) {
             close(i);
@@ -112,6 +119,8 @@ int main(int argc, char** argv) {
               shutdown(i, SHUT_RDWR);
             }
 
+            remove("./sessions");
+            fclose(sessionsp);
             destroy_huffman_tree(root);
             free(code_dict);
             free(bit_array);
@@ -209,14 +218,14 @@ int main(int argc, char** argv) {
             if (requires_compression(msg.header) && !is_compressed(msg.header)) {
               // If requires compression and it is not compressed, compress payload.
               msg.header = 0x78;
-              retrieve_response(i, &msg, conf.dir, &payl, 1, code_dict);
+              retrieve_response(i, &msg, conf.dir, &payl, 1, code_dict, sessionsp);
             } else if (requires_compression(msg.header) && is_compressed(msg.header)) {
               // Decompress the payload to read the payload.
               decompress_payload(&msg, root);
 
               // Create the response and compress this new response.
               msg.header = 0x78;
-              retrieve_response(i, &msg, conf.dir, &payl, 1, code_dict);
+              retrieve_response(i, &msg, conf.dir, &payl, 1, code_dict, sessionsp);
             } else {
               // Decompress the payload first.
               // if (is_compressed(msg.header)) {
@@ -224,8 +233,9 @@ int main(int argc, char** argv) {
               // }
 
               msg.header = 0x70;
-              retrieve_response(i, &msg, conf.dir, &payl, 0, code_dict);
+              retrieve_response(i, &msg, conf.dir, &payl, 0, code_dict, sessionsp);
             }
+
           }
 
           free(msg.payload);

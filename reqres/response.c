@@ -179,8 +179,64 @@ void size_response(int socket_fd, char* target_dir, struct message* msg, int com
   return;
 }
 
+int multiplex_handling(FILE* sessionsp, struct six_type* payl, int socket_fd) {
+  struct stat sesh_buf;
+  stat("./sessions", &sesh_buf);
+
+  /** We store all active session id and filenames in a temporary file called 'sessions'
+  *   , then we store in sessions and write to shared memory file descriptor. payl->data
+  *   contains the filename we want to store. */
+
+  uint32_t session_id = 0;
+  char* filename = malloc(sesh_buf.st_size + 1);
+  memset(filename, 0, sesh_buf.st_size + 1);
+  printf("%ld\n", sesh_buf.st_size);
+  fread(&session_id, 4, 1, sessionsp);
+  fread(filename, 1, sesh_buf.st_size - 4, sessionsp);
+
+  if (payl->session_id == session_id) {
+    if (strcmp(payl->data, filename) == 0) {
+      // I have chosen not to multiplex so I send a response with no payload.
+      uint8_t empty[9] = {0x70, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+      write(socket_fd, empty, 9);
+      rewind(sessionsp);
+
+      return 1;
+    } else {
+      // Same session id and different filename so send an error.
+      uint8_t error[9];
+      err_response(error);
+      write(socket_fd, error, 9);
+      rewind(sessionsp);
+
+      return 1;
+    }
+  }
+
+  rewind(sessionsp);
+
+  fwrite(&payl->session_id, 4, 1, sessionsp);
+  fwrite(payl->data, 1, strlen(payl->data) + 1, sessionsp);
+
+  rewind(sessionsp);
+
+  printf("Session id: %x\n", session_id);
+  printf("Filename: %s\n", filename);
+
+  free(filename);
+  return 0;
+}
+
 void retrieve_response(int socket_fd, struct message* msg, char* target_dir,
-  struct six_type* payl, int compress, struct bit_code* dict) {
+  struct six_type* payl, int compress, struct bit_code* dict, FILE* sessionsp) {
+
+  /** Handle multiplexing of multiple retrieve files. If returns 1, that means
+  *   that function has returned a response of 0x70 with no payload or error
+  *   resposne to the client and we return here. Otherwise, if we continue to
+  *   retrieve the file. */
+  if (multiplex_handling(sessionsp, payl, socket_fd)) {
+    return;
+  }
 
   struct stat buf;
   char* filepath = malloc((strlen(target_dir) + 1) + (strlen(payl->data) + 1));
