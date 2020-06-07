@@ -18,6 +18,7 @@ int near_full(struct stack* st) {
 }
 
 void push(struct stack* st, void* item) {
+  // Resize the array so we can push more items onto the stack.
   if (near_full(st)) {
     st->cap += 2;
     st->array = realloc(st->array, st->cap * sizeof(*(st->array)));

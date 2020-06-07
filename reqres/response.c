@@ -157,8 +157,8 @@ int multiplex_handling(FILE* sessionsp, struct six_type* payl, int socket_fd) {
   stat("./sessions", &sesh_buf);
 
   /** We store all active session id and filenames in a temporary file called 'sessions'
-  *   , then we store in sessions and write to shared memory file descriptor. payl->data
-  *   contains the filename we want to store. */
+  *   , then we check this file to see which session id are active and we send responses
+  *   respectively. payl->data contains the filename we want to store. */
 
   uint32_t session_id = 0;
   char* filename = malloc(sesh_buf.st_size + 1);
@@ -169,7 +169,7 @@ int multiplex_handling(FILE* sessionsp, struct six_type* payl, int socket_fd) {
 
   if (payl->session_id == session_id) {
     if (strcmp(payl->data, filename) == 0) {
-      // I have chosen not to multiplex so I send a response with no payload.
+      // We don't multiplex so we send a response with no payload.
       uint8_t empty[9] = {0x70, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
       write(socket_fd, empty, 9);
       rewind(sessionsp);
@@ -226,6 +226,7 @@ void retrieve_response(int socket_fd, struct message* msg, char* target_dir,
   uint64_t data_lenbe = htobe64(payl->data_len);
   uint64_t offset_be = htobe64(payl->offset);
 
+  // Send an error response if the file size is smaller than the length and offset.
   if (fp == NULL || offset_be > buf.st_size || (data_lenbe + offset_be) > buf.st_size) {
     uint8_t error[9];
     err_response(error);

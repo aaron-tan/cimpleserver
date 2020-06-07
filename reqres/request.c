@@ -82,6 +82,7 @@ int retrieve_request(struct message* msg, struct six_type* payl, struct huffman_
   payl->var_len = (msg->payload_len - 20);
 
   if (type == 0x6) {
+    // Break up the payload into its respective sections and store it in payl struct.
     payl->data = malloc(payl->var_len);
 
     memcpy(&payl->session_id, msg->payload, 4);

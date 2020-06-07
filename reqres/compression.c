@@ -40,6 +40,7 @@ int get_bit(uint32_t* bit_arr, int bit_pos, int bit_num) {
 
   unsigned int bit = (1 << (bit_num - 1));
 
+  // Use the mask to get the bit at bit_pos.
   int mask = bit >> bit_shift;
 
   if (bit_arr[arr_indx] & mask) {
@@ -51,6 +52,7 @@ int get_bit(uint32_t* bit_arr, int bit_pos, int bit_num) {
 }
 
 void set_bit(uint8_t* bit_code, int bit_pos) {
+  // We set the bit in the bit code at bit_pos to 1.
   int arr_indx = bit_pos / 8;
 
   int bit_shift = bit_pos % 8;
@@ -61,6 +63,9 @@ void set_bit(uint8_t* bit_code, int bit_pos) {
 }
 
 struct huffman_tree* create_huffman_tree(struct bit_code* dict) {
+  /** Create a binary tree where for every bit in the bit code, if it's 1 we
+  *   set up a right node, and if it's 0 we set up a left node. Then we simply
+  *   traverse this tree to decompress the payload. */
   struct huffman_tree* root = malloc(sizeof(struct huffman_tree));
   root->node_id = 0;
   root->internal = 2;
@@ -73,6 +78,7 @@ struct huffman_tree* create_huffman_tree(struct bit_code* dict) {
     uint32_t code_32 = htobe32(*((uint32_t*) code.bit_code));
 
     for (int k = 0; k < code.length; k++) {
+      // If the bit is 1, then we put this into the right node.
       if (get_bit(&code_32, k, 32)) {
         if (cur->right == NULL) {
           cur->right = malloc(sizeof(struct huffman_tree));
@@ -85,6 +91,7 @@ struct huffman_tree* create_huffman_tree(struct bit_code* dict) {
         cur->node_id = 'r';
 
       } else {
+        // Otherwise, we put this in the left node.
         if (cur->left == NULL) {
           cur->left = malloc(sizeof(struct huffman_tree));
           cur->left->left = NULL;
@@ -97,6 +104,7 @@ struct huffman_tree* create_huffman_tree(struct bit_code* dict) {
       }
     }
 
+    // When we finish reading the bit code, assign the byte to the node.
     cur->input_byte = i;
     cur->internal = 0;
 
@@ -107,15 +115,18 @@ struct huffman_tree* create_huffman_tree(struct bit_code* dict) {
 }
 
 void destroy_huffman_tree(struct huffman_tree* root) {
+  // Inorder traversal of the tree using one stack data structure.
   struct huffman_tree* cur = root;
   struct stack* st = stack_init();
   struct huffman_tree* temp;
 
   while (!is_empty(st) || cur != NULL) {
+    // Keep pushing left nodes until we get to a null, then we traverse the right nodes.
     if (cur != NULL) {
       push(st, cur);
       cur = cur->left;
     } else {
+      // When we get to a leaf node, free this node and traverse on its right node.
       cur = (struct huffman_tree*) pop(st);
       temp = cur;
       cur = cur->right;
@@ -128,6 +139,7 @@ void destroy_huffman_tree(struct huffman_tree* root) {
 }
 
 struct bit_code* create_dict(uint32_t* bit_arr, int* file_size) {
+  // Create a dictionary where we can look up the byte and get the bit code.
   struct bit_code* code_arr = malloc(256 * sizeof(struct bit_code));
   memset(code_arr, 0, 256 * sizeof(struct bit_code));
 
@@ -173,6 +185,7 @@ void decompress_payload(struct message* msg, struct huffman_tree* root) {
 
   struct huffman_tree* cur = root;
 
+  // Create the decompressed payload and at the end copy this into msg->payload.
   uint64_t decomp_len = 0;
   int decomp_cap = 1;
   uint8_t* decomp_payl = malloc(sizeof(*decomp_payl));
@@ -189,6 +202,8 @@ void decompress_payload(struct message* msg, struct huffman_tree* root) {
     memcpy((payload_32 + i), &payload_32_be, 4);
   }
 
+  /** Traverse the huffman tree to decompress, if the bit is 1 it is a right node.
+  *   If it is 0 we go to the left node. We do this until we hit a non-internal node. */
   for (int i = 0; i < total_bits; i++) {
     if (get_bit(payload_32, i, 32)) {
       cur = cur->right;
@@ -219,6 +234,7 @@ void decompress_payload(struct message* msg, struct huffman_tree* root) {
     }
   }
 
+  // Copy the decompressed payload into msg->payload.
   msg->payload = realloc(msg->payload, decomp_len * sizeof(*msg->payload));
 
   memcpy(&msg->payload_len, &decomp_len, 8);
