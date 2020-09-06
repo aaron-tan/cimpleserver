@@ -10,9 +10,9 @@
 
 int main(int argc, char ** argv) {
     // Compile with: gcc -o genconf -O0 -Wall -Werror -Werror=vla -std=gnu11 -g genconf.c
-    // Usage: ./generate-config -i <dotted quad ipv4 address xxx.xxx.xxx.xxx>
+    // Usage: ./genconf -i <dotted quad ipv4 address xxx.xxx.xxx.xxx>
     // -p <port number> -t <target directory> CONFIG_FILENAME
-    // For example: ./generate-config -i 127.0.0.1 -p 8888 -t /dir config_file
+    // For example: ./genconf -i 127.0.0.1 -p 8888 -t /dir config_file
     // assert(argc == 4);
     int opt;
     long rawport;
