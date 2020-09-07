@@ -29,5 +29,5 @@ int multiplex_handling(FILE* sessionsp, struct six_type* payl, int socket_fd);
 
 // Send file data to the client. Passed in payload structure as arguments.
 void retrieve_response(int socket_fd, struct message* msg, char* target_dir,
-  struct six_type* payl, int compress, struct bit_code* dict, FILE* sessionsp);
+  struct six_type* payl, int compress, struct bit_code* dict, FILE* sessionsp, int sendall_file);
 #endif

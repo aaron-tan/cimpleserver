@@ -111,3 +111,11 @@ int requires_compression(uint8_t head) {
     return 0;
   }
 }
+
+int send_whole_file(uint8_t head) {
+  if (head & 0x02) {
+    return 1;
+  } else {
+    return 0;
+  }
+}

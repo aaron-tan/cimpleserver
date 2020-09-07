@@ -207,23 +207,31 @@ int main(int argc, char** argv) {
           */
           struct six_type payl;
 
+          // If the 7th bit is set to 1, we set this var to send the whole file.
+          int sendall_file = 0;
+
           if (retrieve_request(&msg, &payl, root)) {
+            // Check if the 7th bit is set to 1.
+            if (send_whole_file(msg.header)) {
+              sendall_file = 1;
+            }
+
             // Send the file as a response.
             if (requires_compression(msg.header) && !is_compressed(msg.header)) {
               // If requires compression and it is not compressed, compress payload.
               msg.header = 0x78;
-              retrieve_response(i, &msg, conf.dir, &payl, 1, code_dict, sessionsp);
+              retrieve_response(i, &msg, conf.dir, &payl, 1, code_dict, sessionsp, sendall_file);
             } else if (requires_compression(msg.header) && is_compressed(msg.header)) {
               // Decompress the payload to read the payload.
               decompress_payload(&msg, root);
 
               // Create the response and compress this new response.
               msg.header = 0x78;
-              retrieve_response(i, &msg, conf.dir, &payl, 1, code_dict, sessionsp);
+              retrieve_response(i, &msg, conf.dir, &payl, 1, code_dict, sessionsp, sendall_file);
             } else {
               // Otherwise, send an uncompressed payload.
               msg.header = 0x70;
-              retrieve_response(i, &msg, conf.dir, &payl, 0, code_dict, sessionsp);
+              retrieve_response(i, &msg, conf.dir, &payl, 0, code_dict, sessionsp, sendall_file);
             }
 
           }

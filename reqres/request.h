@@ -31,4 +31,8 @@ int is_compressed(uint8_t head);
 // Check the header to see if the response is required to be compressed.
 int requires_compression(uint8_t head);
 
+// Check if the 7th bit of a retrieve request is set to 1.
+// If true, we read the whole file contents and send it to the client.
+int send_whole_file(uint8_t head);
+
 #endif

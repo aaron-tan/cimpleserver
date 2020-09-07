@@ -4,3 +4,4 @@ config_file
 client
 testing
 sessions
+dir

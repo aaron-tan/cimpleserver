@@ -202,7 +202,7 @@ int multiplex_handling(FILE* sessionsp, struct six_type* payl, int socket_fd) {
 }
 
 void retrieve_response(int socket_fd, struct message* msg, char* target_dir,
-  struct six_type* payl, int compress, struct bit_code* dict, FILE* sessionsp) {
+  struct six_type* payl, int compress, struct bit_code* dict, FILE* sessionsp, int sendall_file) {
 
   /** Handle multiplexing of multiple retrieve files. If returns 1, that means
   *   that function has returned a response of 0x70 with no payload or error
@@ -236,21 +236,40 @@ void retrieve_response(int socket_fd, struct message* msg, char* target_dir,
     return;
   }
 
-  // Create a response.
-  msg->payload = realloc(msg->payload, 20 + data_lenbe);
+  // Payload length variable.
+  uint64_t paylen_be;
 
-  // Seek the file to the offset, given by uint8_t* offset.
-  fseek(fp, offset_be, SEEK_SET);
+  // If the 7th bit of the msg header is 1, we read the whole file.
+  if (sendall_file) {
+    // Create a response to send a whole file.
+    msg->payload = realloc(msg->payload, 20 + buf.st_size);
 
-  uint64_t paylen_be = 20 + data_lenbe;
-  memcpy(&msg->payload_len, &paylen_be, 8);
+    paylen_be = 20 + buf.st_size;
+    memcpy(&msg->payload_len, &paylen_be, 8);
 
-  memcpy(msg->payload, &payl->session_id, 4);
-  memcpy((msg->payload + 4), &payl->offset, 8);
-  memcpy((msg->payload + 12), &payl->data_len, 8);
+    memcpy(msg->payload, &payl->session_id, 4);
+    memcpy((msg->payload + 4), &payl->offset, 8);
+    memcpy((msg->payload + 12), &payl->data_len, 8);
 
-  // Read the contents of the file into the response.
-  fread((msg->payload + 20), data_lenbe, 1, fp);
+    // Read the whole contents of the file into the response.
+    fread((msg->payload + 20), buf.st_size, 1, fp);
+  } else {
+    // Create a response.
+    msg->payload = realloc(msg->payload, 20 + data_lenbe);
+
+    // Seek the file to the offset, given by uint8_t* offset.
+    fseek(fp, offset_be, SEEK_SET);
+
+    paylen_be = 20 + data_lenbe;
+    memcpy(&msg->payload_len, &paylen_be, 8);
+
+    memcpy(msg->payload, &payl->session_id, 4);
+    memcpy((msg->payload + 4), &payl->offset, 8);
+    memcpy((msg->payload + 12), &payl->data_len, 8);
+
+    // Read the contents of the file into the response.
+    fread((msg->payload + 20), data_lenbe, 1, fp);
+  }
 
   if (compress) {
     echo_response(socket_fd, msg, 1, dict);
