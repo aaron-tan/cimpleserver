@@ -72,7 +72,7 @@ int main(int argc, char** argv) {
 
   struct huffman_tree* root = create_huffman_tree(code_dict);
 
-  FILE* sessionsp = fopen("./sessions", "wb+");
+  FILE* sessionsp = fopen("./.sessions", "wb+");
 
   if (sessionsp == NULL) {
     perror("Error creating/opening sessions file");
@@ -118,7 +118,7 @@ int main(int argc, char** argv) {
               shutdown(i, SHUT_RDWR);
             }
 
-            remove("./sessions");
+            remove("./.sessions");
             fclose(sessionsp);
             destroy_huffman_tree(root);
             free(code_dict);

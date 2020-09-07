@@ -1,7 +1,6 @@
 generate-config*
 client-*
 config_file
-client
 testing
-sessions
+*sessions
 dir
