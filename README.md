@@ -10,7 +10,7 @@ The address and port on which the server will be listening on is provided with a
 
 **select (2)** is used to handle multiple connecting clients. Although this may not be the most efficient way of handling multiple connecting clients however this may be a something to improve on in future. Possibly using threads.
 
-## Requests/responses
+## Message structure
 The server will accept connections from clients which are requests. Once the server receives these requests the server will form an appropriate response accordingly.
 
 All client requests and responses consists of a series of bytes. These messages are sent and received in the following format:
@@ -34,3 +34,39 @@ For example: {0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x07, 0xab, 0xcd, 
   - 00 - 2 bits padding
 + 00 00 00 00 00 00 07 - 8 bytes for a payload length of 7 bytes
 + ab cd ef 23 76 eb cb - the 7 byte payload
+
+## Request/response
+The following is a list of all possible requests clients can send and responses from the server. Each has their own type digit and structure.
+
+### Error functionality
+Any client request of an unknown type digit will be sent back an error response by the server. The response is sent with a type digit of 0xf with no payload (payload length of 0) and the connection is closed. This response is also sent if there are any other errors. Error messages are not compressed.
+
+### Echo functionality
+The echo request type digit is 0x0 with an arbitrary byte payload. If the payload is compressed it will be decompressed first.
+
+In response, the server will send back a response of:
++ 1 byte header with type digit 0x1
++ 8 byte payload length representing an arbitrary unsigned integer
++ Payload of arbitrary bytes which is a copy of the payload sent in the request.
+
+If necessary, the payload will be compressed.
+
+### Directory listing functionality
+The listing request type digit is 0x2 with no payload and payload length 0.
+
+The server will send back a response of:
++ 1 byte header with type digit 0x3
++ 8 byte payload length representing an arbitrary unsigned integer
++ Payload of arbitrary bytes of all the filenames in the target directory specified in the config file provided.
+
+Subdirectories and symlinks are not included. The filenames are sent end to end and are separated by NULL bytes. If the directory is empty, a single NULL byte is sent as payload.
+
+### File size query
+Request type 0x4 is a file size query. The payload containing a NULL-terminated filename string.
+
+Server response will contain:
++ 1 byte header with type digit 0x5
++ 8 byte payload length
++ 8 byte payload of the size of the target file (in network byte order)
+
+If the file does not exist, an error response is sent.
