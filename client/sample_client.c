@@ -6,6 +6,7 @@
 #include <unistd.h>
 #include <stdio.h>
 #include <string.h>
+#include <inttypes.h>
 
 int main(int argc, char** argv) {
   /** Sample client program to connect to the server.
@@ -60,10 +61,100 @@ int main(int argc, char** argv) {
   }
 
   // Once connect succeeds, we can start read and write to the connection file descriptor.
+  uint8_t type_digit;
+  uint64_t payload_len;
+  char* payload;
 
-  // We send a shutdown command for now.
-  uint8_t shutdown[9] = {0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
-  write(connection, shutdown, 9);
+  int compressed;
+  int req_compress;
 
+  printf("What is the request you would like to send?\n");
+  scanf("%hhu", &type_digit);
+
+  // Type digit is the leftmost 4 bits. Shift left bitwise by 4.
+  type_digit = type_digit << 4;
+
+  printf("Specify payload length\n");
+  scanf("%lu", &payload_len);
+  getchar();  // Remove the trailing newline from scanf.
+
+  payload = malloc(payload_len);
+
+  printf("Input the payload\n");
+  fgets(payload, payload_len + 1, stdin);
+
+  printf("Is payload compressed?\n");
+  scanf("%d", &compressed);
+
+  // Set 5th bit (compression bit) to 1 if payload is compressed.
+  if (compressed) {
+    type_digit = type_digit | 0x08;
+  }
+
+  printf("Require compression in response?\n");
+  scanf("%d", &req_compress);
+
+  // Set 6th bit (requires compression) to 1 if response must be compressed.
+  if (req_compress) {
+    type_digit = type_digit | 0x04;
+  }
+
+  int msg_len = 9 + payload_len;
+  uint8_t* msg = malloc(9 + payload_len);
+
+  // Copy the type digit, payload length and payload into msg.
+  memcpy(msg, &type_digit, 1);
+  memcpy((msg + 9), payload, payload_len);
+
+  // Convert length to network byte order (big endian).
+  payload_len = htobe64(payload_len);
+  memcpy((msg + 1), &payload_len, 8);
+
+  // Print msg.
+  printf("Client message: ");
+  for (int i = 0; i < msg_len; i++) {
+    printf("0x%hhx ", msg[i]);
+  }
+  puts("");
+
+  // Send the message to the server.
+  write(connection, msg, msg_len);
+
+  // Read the response from the server. Copy response into msg.
+  uint8_t resp_type;
+  uint64_t resp_len;
+
+  if (read(connection, &resp_type, 1) < 1) {
+    // There is no server response. Free all and return.
+    free(payload);
+    free(msg);
+    return 0;
+  }
+  read(connection, &resp_len, 8);
+
+  resp_len = htobe64(resp_len);
+
+  // Reallocate msg memory.
+  msg_len = 9 + resp_len;
+  msg = realloc(msg, (9 + resp_len));
+
+  // Convert resp_len back to host byte order.
+  resp_len = be64toh(resp_len);
+
+  // Memcpy response into msg.
+  memcpy(msg, &resp_type, 1);
+  memcpy((msg + 1), &resp_len, 8);
+  // Read into msg directly.
+  read(connection, (msg + 9), resp_len);
+
+  // Print response message.
+  printf("Server response: ");
+  for (int i = 0; i < msg_len; i++) {
+    printf("0x%hhx ", msg[i]);
+  }
+  puts("");
+
+  free(payload);
+  free(msg);
   return 0;
 }
