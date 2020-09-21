@@ -236,6 +236,14 @@ int main(int argc, char** argv) {
 
           }
 
+          if (receive_request(msg.header)) {
+            if (is_compressed(msg.header)) {
+              decompress_payload(&msg, root);
+            }
+
+            receive_file(&msg);
+          }
+
           free(msg.payload);
         }
       }

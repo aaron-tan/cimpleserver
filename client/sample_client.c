@@ -3,10 +3,43 @@
 #include <assert.h>
 #include <arpa/inet.h>
 #include <sys/types.h>
+#include <sys/stat.h>
 #include <unistd.h>
 #include <stdio.h>
 #include <string.h>
 #include <inttypes.h>
+
+void send_file(int socket_fd, char* filename) {
+  // Open the file we are to send.
+  FILE* fp = fopen(filename, "r+");
+
+  // Declare stat to access file size.
+  struct stat buf;
+  if (stat(filename, &buf) < 0) {
+    perror("stat");
+    exit(EXIT_FAILURE);
+  }
+
+  // Get the length of the string (including the null byte).
+  uint64_t filename_len = strlen(filename) + 1;
+
+  // Construct the message.
+  uint8_t* msg = malloc(17 + filename_len + buf.st_size);
+  uint64_t msg_len = 17 + filename_len + buf.st_size;
+  msg[0] = 0x90;  // Type digit
+  memcpy((msg + 1), &msg_len, 8); // Payload length
+  memcpy((msg + 9), &filename_len, 8);  // Length of filename
+  memcpy((msg + 17), filename, filename_len); // Filename
+
+  fread((msg + (17 + filename_len)), buf.st_size, 1, fp); // File contents.
+
+  // Send the message.
+  write(socket_fd, msg, msg_len);
+
+  fclose(fp);
+  free(msg);
+  return;
+}
 
 int main(int argc, char** argv) {
   /** Sample client program to connect to the server.

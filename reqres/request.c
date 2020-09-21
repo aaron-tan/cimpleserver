@@ -96,6 +96,46 @@ int retrieve_request(struct message* msg, struct six_type* payl, struct huffman_
   }
 }
 
+int receive_request(uint8_t head) {
+  // Get the first 4 bits.
+  uint8_t type = head & 0xf0;
+  type = type >> 4;
+
+  if (type == 0x9) {
+    return 1;
+  } else {
+    return 0;
+  }
+}
+
+void receive_file(struct message* msg) {
+  // Get the length of the filename which is contained in the 1st 8 bytes.
+  uint64_t filename_len;
+  memcpy(&filename_len, msg->payload, 8);
+
+  // Get the filename. Filename length includes null byte.
+  char* filename = malloc(filename_len);
+  memcpy(filename, (msg->payload + 8), filename_len);
+
+  // Open the file or create it if it does not exist.
+  FILE* fp = fopen(filename, "w+");
+
+  // Seek the payload to where the contents begin.
+  uint8_t* data = msg->payload + 8 + filename_len;
+
+  // Get the length of the file contents.
+  uint64_t data_len = msg->payload_len - 8 - filename_len;
+
+  // Write the contents to the file.
+  if (fwrite(data, 1, data_len, fp) < 1) {
+    fprintf(stderr, "0 bytes of data was written\n");
+  }
+
+  fclose(fp);
+  free(filename);
+  return;
+}
+
 int is_compressed(uint8_t head) {
   if (head & 0x08) {
     return 1;
