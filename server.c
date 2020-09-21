@@ -241,7 +241,7 @@ int main(int argc, char** argv) {
               decompress_payload(&msg, root);
             }
 
-            receive_file(&msg);
+            receive_file(conf.dir, &msg);
           }
 
           free(msg.payload);

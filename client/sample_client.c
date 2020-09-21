@@ -22,12 +22,14 @@ void send_file(int socket_fd, char* filename) {
 
   // Get the length of the string (including the null byte).
   uint64_t filename_len = strlen(filename) + 1;
+  // uint64_t filename_lenbe = htobe64(filename_len);
 
   // Construct the message.
   uint8_t* msg = malloc(17 + filename_len + buf.st_size);
   uint64_t msg_len = 17 + filename_len + buf.st_size;
+  uint64_t msg_lenbe = htobe64(msg_len);
   msg[0] = 0x90;  // Type digit
-  memcpy((msg + 1), &msg_len, 8); // Payload length
+  memcpy((msg + 1), &msg_lenbe, 8); // Payload length
   memcpy((msg + 9), &filename_len, 8);  // Length of filename
   memcpy((msg + 17), filename, filename_len); // Filename
 
@@ -96,62 +98,74 @@ int main(int argc, char** argv) {
   // Once connect succeeds, we can start read and write to the connection file descriptor.
   uint8_t type_digit;
   uint64_t payload_len;
-  char* payload;
+  char* payload = NULL;
+  int sendp;
+  uint8_t* msg = NULL;
+  int msg_len;
 
   int compressed;
   int req_compress;
 
-  printf("What is the request you would like to send?\n");
-  scanf("%hhu", &type_digit);
+  printf("Would you like to send a file?\n");
+  scanf("%d", &sendp);
 
-  // Type digit is the leftmost 4 bits. Shift left bitwise by 4.
-  type_digit = type_digit << 4;
+  if (sendp) {
+    printf("Sending a test file called send.txt\n");
+    send_file(connection, "send.txt");
+  } else {
+    printf("What is the request you would like to send?\n");
+    scanf("%hhu", &type_digit);
 
-  printf("Specify payload length\n");
-  scanf("%lu", &payload_len);
-  getchar();  // Remove the trailing newline from scanf.
+    // Type digit is the leftmost 4 bits. Shift left bitwise by 4.
+    type_digit = type_digit << 4;
 
-  payload = malloc(payload_len);
+    printf("Specify payload length\n");
+    scanf("%lu", &payload_len);
+    getchar();  // Remove the trailing newline from scanf.
 
-  printf("Input the payload\n");
-  fgets(payload, payload_len + 1, stdin);
+    payload = malloc(payload_len);
 
-  printf("Is payload compressed?\n");
-  scanf("%d", &compressed);
+    printf("Input the payload\n");
+    fgets(payload, payload_len + 1, stdin);
 
-  // Set 5th bit (compression bit) to 1 if payload is compressed.
-  if (compressed) {
-    type_digit = type_digit | 0x08;
+    printf("Is payload compressed?\n");
+    scanf("%d", &compressed);
+
+    // Set 5th bit (compression bit) to 1 if payload is compressed.
+    if (compressed) {
+      type_digit = type_digit | 0x08;
+    }
+
+    printf("Require compression in response?\n");
+    scanf("%d", &req_compress);
+
+    // Set 6th bit (requires compression) to 1 if response must be compressed.
+    if (req_compress) {
+      type_digit = type_digit | 0x04;
+    }
+
+    msg_len = 9 + payload_len;
+    msg = malloc(9 + payload_len);
+
+    // Copy the type digit, payload length and payload into msg.
+    memcpy(msg, &type_digit, 1);
+    memcpy((msg + 9), payload, payload_len);
+
+    // Convert length to network byte order (big endian).
+    payload_len = htobe64(payload_len);
+    memcpy((msg + 1), &payload_len, 8);
+
+    // Print msg.
+    printf("Client message: ");
+    for (int i = 0; i < msg_len; i++) {
+      printf("0x%hhx ", msg[i]);
+    }
+    puts("");
+
+    // Send the message to the server.
+    write(connection, msg, msg_len);
+
   }
-
-  printf("Require compression in response?\n");
-  scanf("%d", &req_compress);
-
-  // Set 6th bit (requires compression) to 1 if response must be compressed.
-  if (req_compress) {
-    type_digit = type_digit | 0x04;
-  }
-
-  int msg_len = 9 + payload_len;
-  uint8_t* msg = malloc(9 + payload_len);
-
-  // Copy the type digit, payload length and payload into msg.
-  memcpy(msg, &type_digit, 1);
-  memcpy((msg + 9), payload, payload_len);
-
-  // Convert length to network byte order (big endian).
-  payload_len = htobe64(payload_len);
-  memcpy((msg + 1), &payload_len, 8);
-
-  // Print msg.
-  printf("Client message: ");
-  for (int i = 0; i < msg_len; i++) {
-    printf("0x%hhx ", msg[i]);
-  }
-  puts("");
-
-  // Send the message to the server.
-  write(connection, msg, msg_len);
 
   // Read the response from the server. Copy response into msg.
   uint8_t resp_type;

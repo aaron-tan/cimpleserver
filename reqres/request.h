@@ -32,7 +32,7 @@ int receive_request(uint8_t head);
 *   and writes the contents contained in the payload to a file given
 *   by the filename in the first 8 bytes of the payload.
 */
-void receive_file(struct message* msg);
+void receive_file(char* target_dir, struct message* msg);
 
 // Check the header to see if payload is compressed.
 int is_compressed(uint8_t head);
