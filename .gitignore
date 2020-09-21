@@ -4,4 +4,3 @@ config_file
 testing
 *sessions
 dir
-client/send.txt
