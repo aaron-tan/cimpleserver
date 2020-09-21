@@ -70,3 +70,15 @@ Server response will contain:
 + 8 byte payload of the size of the target file (in network byte order)
 
 If the file does not exist, an error response is sent.
+
+## Retrieve file
+Request type 0x6 is a retrieve file request. This requests for part or whole of a file in the target directory specified in the config file. Besides the usual structure of a typical message it also has:
+
++ 4 bytes - an arbitrary sequence of bytes representing a session ID.
++ 8 bytes - the starting offset of the file that is to be retrieved
++ 8 bytes - the length of the data to be retrieved
++ Variable bytes - the null terminated string representing the filename.
+
+In response, the server will send a message with type digit 0x7 with payload consisting of a portion of the file contents that was requested from the target directory. The start of the file is seeked forwards using the offset that was part of the payload from the request message, and a length specified from the same request message previously is read into the response. This is sent back to the client.
+
+For now, handling of multiple connections requesting file retrieval is not yet implemented. If multiple connections are made with file retrieval request a response with type 0x7 and empty payload is sent instead. However, this may be a feature that could be implemented in future.
