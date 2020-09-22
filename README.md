@@ -82,3 +82,16 @@ Request type 0x6 is a retrieve file request. This requests for part or whole of 
 In response, the server will send a message with type digit 0x7 with payload consisting of a portion of the file contents that was requested from the target directory. The start of the file is seeked forwards using the offset that was part of the payload from the request message, and a length specified from the same request message previously is read into the response. This is sent back to the client.
 
 For now, handling of multiple connections requesting file retrieval is not yet implemented. If multiple connections are made with file retrieval request a response with type 0x7 and empty payload is sent instead. However, this may be a feature that could be implemented in future.
+
+## Receive file
+Receive request type digit 0x9 is a receive file request. Any client connected to the server can send a receive request which contains as its payload the contents of a file that it wants the server to receive.
+
+The structure of the message will be as follows:
++ 1 byte message header - type digit 0x9
++ 8 bytes - payload length
+Payload of the message consists of:
++ First 8 bytes - length of the filename including the null byte
++ Variable length obtained from the previous 8 bytes is the filename itself
++ Rest of the payload contains the data of the file.
+
+Once the server successfully receives the request message and writes the contents to the file in the target directory, the server will send back a response containing type digit 0xa with zero payload and payload length. This is a confirmation response sent to the client to let the client know that the server has successfully received the message.
