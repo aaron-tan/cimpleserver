@@ -95,3 +95,17 @@ Payload of the message consists of:
 + Rest of the payload contains the data of the file.
 
 Once the server successfully receives the request message and writes the contents to the file in the target directory, the server will send back a response containing type digit 0xa with zero payload and payload length. This is a confirmation response sent to the client to let the client know that the server has successfully received the message.
+
+## Shutdown
+Request type digit 0x8 with no payload is a shutdown command. The server will close all connections, clean up all allocated memory, processes and threads and exit.
+
+## Compression
+Compression is applied by replacing the uncompressed bytes in the payload with variable length bit sequences known as bit codes. The bit codes are given by a compression dictionary which defines a mapping of bytes to a variable length bit sequence to replace it by and consists of 256 segments. Each of the segments corresponds to bytes ranging from 0x00 to 0xff. Note that there will be padding of 0 bits to align the sequence to the byte boundary.
+
+The compression dictionary provided in the binary file **compression.dict** contains the following structure consisting of 256 segments representing bytes 0x00 to 0xff, no padding in between:
++ 1 byte - unsigned integer representing the length of the code
++ Variable number of bits - the bit code used to encode the byte value
+
+To compress a payload simply read the segments until you find the byte you want. Then read the length of the code and replace the byte with that bit code. Repeat for each byte in the payload and the result will be the compressed payload.
+
+To simplify this, I create a dictionary which maps each bit code to the byte value it represents. This is done with the `create_dict` function in **compress.c** which will read the bit code following the procedure above. This dictionary allows us to 'look-up' the bit code we want. I create an array of `struct bit_code` and for each byte we can simply call, for example, `code_arr[0x00]` and this will return the `struct bit_code` which contains the bit code we need as a member variable.
