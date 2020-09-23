@@ -12,7 +12,7 @@ int invalid_check(uint8_t head) {
   type = type >> 4;
 
   // Do an invalid check.
-  if (type == 0x0 || type == 0x2 || type == 0x4 || type == 0x6) {
+  if (type == 0x0 || type == 0x2 || type == 0x4 || type == 0x6 || type == 0x9) {
     // The type digit is not any request types.
     return 0;
   } else {
@@ -94,6 +94,48 @@ int retrieve_request(struct message* msg, struct six_type* payl, struct huffman_
   } else {
     return 0;
   }
+}
+
+int receive_request(uint8_t head) {
+  // Get the first 4 bits.
+  uint8_t type = head & 0xf0;
+  type = type >> 4;
+
+  if (type == 0x9) {
+    return 1;
+  } else {
+    return 0;
+  }
+}
+
+void receive_file(char* target_dir, struct message* msg) {
+  // Get the length of the filename which is contained in the 1st 8 bytes.
+  uint64_t filename_len;
+  memcpy(&filename_len, msg->payload, 8);
+
+  // Get the filename. Filename length includes null byte.
+  char* filepath = malloc(strlen(target_dir)+ 1 + filename_len);
+  memcpy(filepath, target_dir, strlen(target_dir));
+  filepath[strlen(target_dir)] = '/';
+  memcpy((filepath + strlen(target_dir) + 1), (msg->payload + 8), filename_len);
+
+  // Open the file or create it if it does not exist.
+  FILE* fp = fopen(filepath, "w+");
+
+  // Seek the payload to where the contents begin.
+  uint8_t* data = msg->payload + 8 + filename_len;
+
+  // Get the length of the file contents.
+  uint64_t data_len = msg->payload_len - 8 - filename_len;
+
+  // Write the contents to the file.
+  if (fwrite(data, 1, data_len, fp) < 1) {
+    fprintf(stderr, "0 bytes of data was written\n");
+  }
+
+  fclose(fp);
+  free(filepath);
+  return;
 }
 
 int is_compressed(uint8_t head) {

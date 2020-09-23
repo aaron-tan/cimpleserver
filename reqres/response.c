@@ -281,3 +281,12 @@ void retrieve_response(int socket_fd, struct message* msg, char* target_dir,
   free(filepath);
   return;
 }
+
+void receive_response(int socket_fd, struct message* msg, struct bit_code* dict) {
+  // Send a response with type digit 0xa and pay length 0.
+  msg->header = 0xa0;
+  msg->payload_len = 0;
+
+  echo_response(socket_fd, msg, 0, dict);
+  return;
+}

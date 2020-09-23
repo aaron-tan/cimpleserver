@@ -25,6 +25,15 @@ int size_request(uint8_t head);
 // and filename into the arguments given, then return 1 or 0.
 int retrieve_request(struct message* msg, struct six_type* payl, struct huffman_tree* root);
 
+// Check if it is a receive request from the client.
+int receive_request(uint8_t head);
+
+/** If there is a receive request, this function takes the message
+*   and writes the contents contained in the payload to a file given
+*   by the filename in the first 8 bytes of the payload.
+*/
+void receive_file(char* target_dir, struct message* msg);
+
 // Check the header to see if payload is compressed.
 int is_compressed(uint8_t head);
 

@@ -31,3 +31,8 @@ int multiplex_handling(FILE* sessionsp, struct six_type* payl, int socket_fd);
 void retrieve_response(int socket_fd, struct message* msg, char* target_dir,
   struct six_type* payl, int compress, struct bit_code* dict, FILE* sessionsp, int sendall_file);
 #endif
+
+/** Send a response to the receive file request. It has no payload and is simply
+*   to let the client know that the server has received the file.
+*/
+void receive_response(int socket_fd, struct message* msg, struct bit_code* dict);
