@@ -71,7 +71,7 @@ Server response will contain:
 
 If the file does not exist, an error response is sent.
 
-## Retrieve file
+### Retrieve file
 Request type 0x6 is a retrieve file request. This requests for part or whole of a file in the target directory specified in the config file. Besides the usual structure of a typical message it also has:
 
 + 4 bytes - an arbitrary sequence of bytes representing a session ID.
@@ -83,7 +83,7 @@ In response, the server will send a message with type digit 0x7 with payload con
 
 For now, handling of multiple connections requesting file retrieval is not yet implemented. If multiple connections are made with file retrieval request a response with type 0x7 and empty payload is sent instead. However, this may be a feature that could be implemented in future.
 
-## Receive file
+### Receive file
 Receive request type digit 0x9 is a receive file request. Any client connected to the server can send a receive request which contains as its payload the contents of a file that it wants the server to receive.
 
 The structure of the message will be as follows:
@@ -96,7 +96,7 @@ Payload of the message consists of:
 
 Once the server successfully receives the request message and writes the contents to the file in the target directory, the server will send back a response containing type digit 0xa with zero payload and payload length. This is a confirmation response sent to the client to let the client know that the server has successfully received the message.
 
-## Shutdown
+### Shutdown
 Request type digit 0x8 with no payload is a shutdown command. The server will close all connections, clean up all allocated memory, processes and threads and exit.
 
 ## Compression
@@ -109,3 +109,10 @@ The compression dictionary provided in the binary file **compression.dict** cont
 To compress a payload simply read the segments until you find the byte you want. Then read the length of the code and replace the byte with that bit code. Repeat for each byte in the payload and the result will be the compressed payload.
 
 To simplify this, I create a dictionary which maps each bit code to the byte value it represents. This is done with the `create_dict` function in **compress.c** which will read the bit code following the procedure above. This dictionary allows us to 'look-up' the bit code we want. I create an array of `struct bit_code` and for each byte we can simply call, for example, `code_arr[0x00]` and this will return the `struct bit_code` which contains the bit code we need as a member variable.
+
+## Decompression
+Huffman trees are used to decompress the payload with the function `create_huffman_tree`. A Huffman tree is a binary tree where a left node represents a 0 bit and a right node represents a 1 bit. These nodes are known as internal nodes. Every payload can be decompressed by traversing this binary tree until we get to a leaf node which contains the byte value that this bit code represents. Then we can simply replace the bit code with the byte value. We keep doing this for the whole length of the payload to decompress it all.
+
+We loop through the bit code array created for compression outlined above and for every bit in the bit code in the compression dictionary we create a binary tree where the left node represents a 0 bit and a right node represents a 1 bit. Once the bit code is completed a leaf node is created to represent the byte value and continue on until every byte value is represented.
+
+In order to destroy the huffman tree, we use a stack data structure and inorder traversal of the tree to free the nodes of the huffman tree. The algorithm for the inorder traversal basically works by traversing the leftmost nodes and pushing them onto the stack until we reach a leaf node (where left and right nodes are both null). When we get to a leaf node, we pop a node from the stack, free it, then traverse on the right nodes. We keep doing this until the stack is empty.
