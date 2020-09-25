@@ -123,6 +123,7 @@ int main(int argc, char** argv) {
   // Read the response from the server. Copy response into msg.
   uint8_t resp_type;
   uint64_t resp_len;
+  uint64_t resp_lenbe;
 
   if (read(connection, &resp_type, 1) < 1) {
     // There is no server response. Free all and return.
@@ -132,29 +133,35 @@ int main(int argc, char** argv) {
   }
   read(connection, &resp_len, 8);
 
-  resp_len = htobe64(resp_len);
-
-  // Reallocate msg memory.
-  msg_len = 9 + resp_len;
-  msg = realloc(msg, (9 + resp_len));
-
-  // Convert resp_len back to host byte order.
-  resp_len = be64toh(resp_len);
+  // Convert to big endian.
+  resp_lenbe = htobe64(resp_len);
 
   // Memcpy response into msg.
   memcpy(msg, &resp_type, 1);
   memcpy((msg + 1), &resp_len, 8);
-  // Read into msg directly.
-  read(connection, (msg + 9), resp_len);
+
+  // Read the payload.
+  uint8_t* resp = malloc(resp_lenbe);
+  read(connection, resp, resp_lenbe);
 
   // Print response message.
   printf("Server response: ");
-  for (int i = 0; i < msg_len; i++) {
+  // Print the type digit
+  printf("0x%hhx ", msg[0]);
+
+  // Print the payload length in bytes
+  for (int i = 1; i < 9; i++) {
     printf("0x%hhx ", msg[i]);
+  }
+
+  // Print the payload in bytes
+  for (int i = 0; i < resp_lenbe; i++) {
+    printf("0x%hhx ", resp[i]);
   }
   puts("");
 
   free(payload);
   free(msg);
+  free(resp);
   return 0;
 }
