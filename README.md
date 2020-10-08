@@ -1,12 +1,17 @@
 # CimpleServer
 CimpleServer (pronounced "simple") is a server program written in C that receives requests from clients and sends back responses. The program is able to support multiple connecting clients and is also able to compress and decompress responses and requests.
 
+## Installation
+To install simply run `make`. An executable called `server` will be created. Run it with a configuration file as a single argument. `./server sample_config`. A sample configuration file `sample_config` is provided.
+
+There is a program to generate a configuration file under the conf directory. The configuration file contains an IPv4 address, port number and target directory which will be used by the server. A new config file can be generated using the genconf.c file. To create a config file simply run `./genconf -i <dotted quad ipv4 address xxx.xxx.xxx.xxx> -p <port number> -t <target directory> CONFIG_FILENAME`. This configuration file is passed to server program as an argument.
+
 ## Introduction
 The server creates TCP sockets to listen for requests from clients. It reads the requests and checks for a specific message header type. If the message header type is a recognised type the appropriate response is sent back to the client. A list of message header types are detailed below.
 
 CimpleServer uses system calls to handle connections. These calls can be found using the manpages (manpages were utilised heavily during the development of this program).
 
-The address and port on which the server will be listening on is provided with a config file. A sample config file (sample_config) is provided with IP address set to 127.0.0.1 (localhost) and port 9000. The config file also contains the name of a target directory. This target directory will be used to retrieve files and send to the client or place file contents sent from a client. A new config file can be generated using the genconf.c file in the conf directory. To create a config file run `./genconf -i <dotted quad ipv4 address xxx.xxx.xxx.xxx> -p <port number> -t <target directory> CONFIG_FILENAME`
+The address and port on which the server will be listening on is provided with a config file. A sample config file (sample_config) is provided with IP address set to 127.0.0.1 (localhost) and port 9000. Instructions on how to generate a configuration file is detailed in the previous section. The config file also contains the name of a target directory. This target directory will be used to retrieve files and send to the client or place file contents sent from a client.
 
 **select (2)** is used to handle multiple connecting clients. Although this may not be the most efficient way of handling multiple connecting clients however this may be a something to improve on in future. Possibly using threads.
 
